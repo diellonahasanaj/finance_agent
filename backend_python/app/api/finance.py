@@ -5,6 +5,8 @@ from app.services.data_handling import data_handler
 from app.services.expense_analysis import expense_analyzer
 from app.services.decision_engine import decision_engine
 from app.services.recommendation_engine import recommendation_engine
+from app.services.financial_planning_service import debt_repayment_planner, savings_goal_planner, financial_health_analyzer
+from app.services.alerts_service import alerts_manager
 from app.utils.auth import get_current_user
 from typing import Optional
 from datetime import datetime
@@ -425,7 +427,8 @@ def solve_problem(message: str, data: dict) -> str:
     
     # High expenses problem
     elif any(word in words for word in ['expense', 'cost', 'reduce', 'cut']):
-        return f"✂️ **Expense Reduction:**\n\nTop 3 expense categories:\n" + "\n".join([f"{i+1}. {cat}: ${amount:.2f}" for i, (cat, amount) in enumerate(data['top_categories']])]) + "\n\nFocus on reducing the top category by 20-30% for maximum impact."
+        categories_str = "\n".join([f"{i+1}. {cat}: ${amount:.2f}" for i, (cat, amount) in enumerate(data.get('top_categories', []))])
+        return f"✂️ **Expense Reduction:**\n\nTop 3 expense categories:\n{categories_str}\n\nFocus on reducing the top category by 20-30% for maximum impact."
     
     return "🔧 I can help with overspending, low income, or high expense problems. What specific financial challenge are you facing?"
 
