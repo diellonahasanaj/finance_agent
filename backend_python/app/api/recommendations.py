@@ -18,6 +18,7 @@ router = APIRouter()
 RECOMMENDATIONS_FILE = "recommendations.json"
 EXPENSES_FILE = "expenses.json"
 BUDGETS_FILE = "budgets.json"
+INCOMES_FILE = "incomes.json"
 
 
 def load_data(filename):
@@ -49,12 +50,13 @@ async def get_recommendations(user=Depends(get_current_user)):
         user_key = get_user_data_key(user)
         expenses_data = load_data(EXPENSES_FILE)
         budgets_data = load_data(BUDGETS_FILE)
-        
+        incomes_data = load_data(INCOMES_FILE)
+
         user_expenses = expenses_data.get(user_key, [])
         user_budgets = budgets_data.get(user_key, [])
-        
-        # Calculate financial metrics
-        total_income = 0  # From incomes endpoint
+        user_incomes = incomes_data.get(user_key, [])
+
+        total_income = sum(i.get('amount', 0) for i in user_incomes)
         total_expenses = sum(e.get('amount', 0) for e in user_expenses)
         
         category_breakdown = {}
@@ -172,9 +174,7 @@ async def get_expense_categories(user=Depends(get_current_user)):
 
 @router.post("/classify-expense")
 async def classify_expense(
-    title: str,
-    description: str = "",
-    current_category: str = "",
+    body: dict,
     user=Depends(get_current_user)
 ):
     """
@@ -188,6 +188,8 @@ async def classify_expense(
         }
     """
     try:
+        title = body.get("title", body.get("description", ""))
+        description = body.get("description", "")
         # Get classification
         classified_category, confidence = expense_classifier.classify_expense(title, description)
         

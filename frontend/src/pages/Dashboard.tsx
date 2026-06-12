@@ -1,35 +1,35 @@
-
-
 import { useState, useEffect } from "react";
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  TextField, 
-  Grid, 
-  Card, 
-  CardContent, 
+import {
+  Box,
+  Typography,
+  Paper,
+  TextField,
+  Grid,
+  Card,
+  CardContent,
   Avatar,
   LinearProgress,
   useTheme,
   alpha,
   IconButton,
   Tooltip,
-  CircularProgress
-} from '@mui/material';
-import { 
+  CircularProgress,
+  Alert,
+  Chip,
+} from "@mui/material";
+import {
   AccountBalanceWallet,
   TrendingUp,
   TrendingDown,
   Savings,
   Lightbulb,
   Refresh,
-  Add
-} from '@mui/icons-material';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-// @ts-ignore
-import API from '../services/api';
+  Add,
+  Warning,
+} from "@mui/icons-material";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 interface StatCard {
   title: string;
@@ -43,6 +43,7 @@ interface DashboardData {
   total_income: number;
   total_expenses: number;
   net_income: number;
+  balance: number;
   total_debts: number;
   budgets: Array<{
     category: string;
@@ -50,6 +51,19 @@ interface DashboardData {
     spent: number;
     remaining: number;
     percentage: number;
+  }>;
+  alerts: Array<{
+    type: string;
+    message: string;
+    reason: string;
+    impact: string;
+  }>;
+  recommendations: Array<{
+    title: string;
+    description: string;
+    priority: string;
+    reasoning: string;
+    category: string;
   }>;
   recent_transactions: Array<{
     _id: string;
@@ -63,39 +77,26 @@ interface DashboardData {
   expense_count: number;
   budget_count: number;
   debt_count: number;
+  savings_rate: number;
+  savings_goal_progress: number;
 }
 
 function Dashboard() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [month, setMonth] = useState(() => {
-    const d = new Date();
-    return d.toISOString().slice(0, 7);
-  });
+  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
-
-  // Refresh data when component gains focus (user navigates back)
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchDashboardData();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
+  }, [month]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await API.get("/finance/dashboard");
+      const response = await API.get("/finance/dashboard", { params: { month } });
       setDashboardData(response.data);
       setError("");
     } catch (err: any) {
@@ -105,341 +106,253 @@ function Dashboard() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+
+  const stats: StatCard[] = dashboardData
+    ? [
+        {
+          title: "Net Income",
+          value: formatCurrency(dashboardData.net_income),
+          change: dashboardData.savings_rate,
+          icon: <AccountBalanceWallet />,
+          color:
+            dashboardData.net_income >= 0
+              ? theme.palette.success.main
+              : theme.palette.error.main,
+        },
+        {
+          title: "Total Income",
+          value: formatCurrency(dashboardData.total_income),
+          change: dashboardData.savings_rate,
+          icon: <TrendingUp />,
+          color: theme.palette.success.main,
+        },
+        {
+          title: "Total Expenses",
+          value: formatCurrency(dashboardData.total_expenses),
+          change: -dashboardData.savings_rate,
+          icon: <TrendingDown />,
+          color: theme.palette.error.main,
+        },
+        {
+          title: "Total Debts",
+          value: formatCurrency(dashboardData.total_debts),
+          change: 0,
+          icon: <Savings />,
+          color: theme.palette.warning.main,
+        },
+      ]
+    : [];
+
+  const alertColor = (type: string) => {
+    if (type === "error") return theme.palette.error.main;
+    if (type === "warning") return theme.palette.warning.main;
+    return theme.palette.info.main;
   };
-
-  const stats: StatCard[] = dashboardData ? [
-    {
-      title: 'Net Income',
-      value: formatCurrency(dashboardData.net_income),
-      change: dashboardData.total_income > 0 ? ((dashboardData.net_income / dashboardData.total_income) * 100) : 0,
-      icon: <AccountBalanceWallet />,
-      color: dashboardData.net_income >= 0 ? theme.palette.success.main : theme.palette.error.main
-    },
-    {
-      title: 'Total Income',
-      value: formatCurrency(dashboardData.total_income),
-      change: 8.2,
-      icon: <TrendingUp />,
-      color: theme.palette.success.main
-    },
-    {
-      title: 'Total Expenses',
-      value: formatCurrency(dashboardData.total_expenses),
-      change: -5.3,
-      icon: <TrendingDown />,
-      color: theme.palette.error.main
-    },
-    {
-      title: 'Total Debts',
-      value: formatCurrency(dashboardData.total_debts),
-      change: -2.1,
-      icon: <Savings />,
-      color: theme.palette.warning.main
-    }
-  ] : [];
-
-  const aiInsights = dashboardData ? [
-    `You have ${dashboardData.income_count} income records and ${dashboardData.expense_count} expense records.`,
-    `Your net income is ${dashboardData.net_income >= 0 ? 'positive' : 'negative'}.`,
-    `You have ${dashboardData.budget_count} active budgets to track.`,
-  ] : [];
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
           <CircularProgress size={60} />
         </Box>
       ) : error ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
           <Typography variant="h6" color="error">{error}</Typography>
         </Box>
       ) : (
         <>
-      {/* Header */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 4,
-        flexWrap: 'wrap',
-        gap: 2
-      }}>
-        <Box>
-          <Typography 
-            variant="h3" 
-            component="h1" 
-            sx={{ 
-              fontWeight: 700,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              mb: 1
-            }}
-          >
-            Financial Dashboard
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Track your financial health and make informed decisions
-          </Typography>
-        </Box>
-        
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Paper sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-              Month:
-            </Typography>
-            <TextField
-              type="month"
-              value={month}
-              onChange={e => setMonth(e.target.value)}
-              size="small"
-              sx={{ 
-                width: 150,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                }
-              }}
-            />
-          </Paper>
-          
-          <Tooltip title="Refresh Data">
-            <IconButton 
-              onClick={fetchDashboardData}
-              sx={{ 
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                }
-              }}
-            >
-              <Refresh />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4, flexWrap: "wrap", gap: 2 }}>
+            <Box>
+              <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+                Financial Dashboard
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Track your financial health and receive intelligent guidance
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+              <Paper sx={{ p: 1, display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                  Month:
+                </Typography>
+                <TextField
+                  type="month"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                  size="small"
+                  sx={{ width: 150 }}
+                />
+              </Paper>
+              <Tooltip title="Refresh Data">
+                <IconButton onClick={fetchDashboardData}>
+                  <Refresh />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {stats.map((stat, index) => (
-          <Grid item key={stat.title} xs={12} sm={6} md={3}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card 
-                sx={{ 
-                  height: '100%',
-                  borderRadius: 3,
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
-                  }
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Avatar 
-                      sx={{ 
-                        backgroundColor: alpha(stat.color, 0.1),
-                        color: stat.color,
-                        width: 48,
-                        height: 48
-                      }}
-                    >
-                      {stat.icon}
-                    </Avatar>
-                    <Box sx={{ textAlign: 'right' }}>
-                      <Typography 
-                        variant="caption" 
-                        color={stat.change > 0 ? 'success.main' : 'error.main'}
-                        sx={{ fontWeight: 600 }}
-                      >
-                        {stat.change > 0 ? '+' : ''}{stat.change}%
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                    {stat.value}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {stat.title}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </motion.div>
+          {dashboardData?.alerts && dashboardData.alerts.length > 0 && (
+            <Box sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}>
+              {dashboardData.alerts.map((alert, index) => (
+                <Alert
+                  key={index}
+                  severity={alert.type === "error" ? "error" : alert.type === "warning" ? "warning" : "info"}
+                  icon={<Warning />}
+                >
+                  <strong>{alert.message}</strong> — {alert.reason}. {alert.impact}
+                </Alert>
+              ))}
+            </Box>
+          )}
+
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {stats.map((stat, index) => (
+              <Grid item key={stat.title} xs={12} sm={6} md={3}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
+                  <Card sx={{ height: "100%", borderRadius: 3 }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                        <Avatar sx={{ backgroundColor: alpha(stat.color, 0.1), color: stat.color, width: 48, height: 48 }}>
+                          {stat.icon}
+                        </Avatar>
+                        {stat.title === "Net Income" && (
+                          <Typography variant="caption" color={stat.change >= 0 ? "success.main" : "error.main"} sx={{ fontWeight: 600 }}>
+                            {stat.change.toFixed(1)}% savings rate
+                          </Typography>
+                        )}
+                      </Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>{stat.value}</Typography>
+                      <Typography variant="body2" color="text.secondary">{stat.title}</Typography>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
           </Grid>
-        ))}
-      </Grid>
 
-      <Grid container spacing={3}>
-        {/* Recent Expenses */}
-        <Grid item xs={12} md={6}>
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card sx={{ height: '100%', borderRadius: 3 }}>
+          {dashboardData?.budgets && dashboardData.budgets.length > 0 && (
+            <Card sx={{ mb: 4, borderRadius: 3 }}>
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Recent Expenses
-                  </Typography>
-                  <IconButton 
-                    size="small"
-                    onClick={() => navigate('/add-transaction')}
-                    sx={{ 
-                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                      '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                      }
-                    }}
-                  >
-                    <Add />
-                  </IconButton>
-                </Box>
-                
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {dashboardData?.recent_transactions?.slice(0, 5).map((transaction, index) => (
-                    <motion.div
-                      key={transaction._id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + index * 0.05 }}
-                    >
-                      <Box 
-                        sx={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center',
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Budget Status</Typography>
+                <Grid container spacing={2}>
+                  {dashboardData.budgets.map((budget) => (
+                    <Grid item xs={12} md={6} key={budget.category}>
+                      <Box sx={{ mb: 1, display: "flex", justifyContent: "space-between" }}>
+                        <Typography variant="body2">{budget.category}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {formatCurrency(budget.spent)} / {formatCurrency(budget.limit)}
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={Math.min(budget.percentage, 100)}
+                        color={budget.percentage > 100 ? "error" : budget.percentage >= 80 ? "warning" : "primary"}
+                        sx={{ height: 8, borderRadius: 4 }}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </CardContent>
+            </Card>
+          )}
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ height: "100%", borderRadius: 3 }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Recent Transactions</Typography>
+                    <IconButton size="small" onClick={() => navigate("/add-transaction")}>
+                      <Add />
+                    </IconButton>
+                  </Box>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    {dashboardData?.recent_transactions?.map((transaction) => (
+                      <Box
+                        key={transaction._id}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
                           p: 2,
                           borderRadius: 2,
                           backgroundColor: alpha(theme.palette.background.default, 0.5),
-                          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                          }
                         }}
                       >
                         <Box>
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {transaction.description || transaction.category || transaction.source || 'Transaction'}
+                            {transaction.description || transaction.category || transaction.source || "Transaction"}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {transaction.category || 'General'} • {transaction.date}
+                            {transaction.category || transaction.source || "General"} • {transaction.date}
                           </Typography>
                         </Box>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontWeight: 600, 
-                            color: transaction.category ? theme.palette.error.main : theme.palette.success.main 
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                            color: transaction.source ? theme.palette.success.main : theme.palette.error.main,
                           }}
                         >
-                          {transaction.category ? '-' : '+'}{formatCurrency(transaction.amount)}
+                          {transaction.source ? "+" : "-"}
+                          {formatCurrency(transaction.amount)}
                         </Typography>
                       </Box>
-                    </motion.div>
-                  ))}
-                  {!dashboardData?.recent_transactions?.length && (
-                    <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-                      No transactions yet. Start by adding your income and expenses.
-                    </Typography>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </Grid>
+                    ))}
+                    {!dashboardData?.recent_transactions?.length && (
+                      <Typography variant="body2" color="text.secondary">
+                        No transactions yet. Start by adding your income and expenses.
+                      </Typography>
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        {/* AI Insights */}
-        <Grid item xs={12} md={6}>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card sx={{ height: '100%', borderRadius: 3 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <Avatar 
-                    sx={{ 
-                      backgroundColor: alpha(theme.palette.secondary.main, 0.1),
-                      color: theme.palette.secondary.main,
-                      mr: 2
-                    }}
-                  >
-                    <Lightbulb />
-                  </Avatar>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    AI Financial Insights
-                  </Typography>
-                </Box>
-                
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {aiInsights.map((insight, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1 }}
-                    >
-                      <Paper 
-                        sx={{ 
-                          p: 2,
-                          borderRadius: 2,
-                          backgroundColor: alpha(theme.palette.info.main, 0.05),
-                          border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
-                          borderLeft: `3px solid ${theme.palette.info.main}`
-                        }}
-                        elevation={0}
-                      >
-                        <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
-                          {insight}
-                        </Typography>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ height: "100%", borderRadius: 3 }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                    <Avatar sx={{ backgroundColor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main, mr: 2 }}>
+                      <Lightbulb />
+                    </Avatar>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Recommendations</Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    {dashboardData?.recommendations?.slice(0, 3).map((rec, index) => (
+                      <Paper key={index} sx={{ p: 2, borderRadius: 2 }} elevation={0}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{rec.title}</Typography>
+                          <Chip label={rec.priority} size="small" color={rec.priority === "high" ? "error" : "warning"} />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">{rec.reasoning}</Typography>
                       </Paper>
-                    </motion.div>
-                  ))}
-                </Box>
-                
-                <Box sx={{ mt: 3, p: 2, borderRadius: 2, backgroundColor: alpha(theme.palette.success.main, 0.05) }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    🎯 Monthly Goal Progress
-                  </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={75}
-                    sx={{
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: alpha(theme.palette.divider, 0.2),
-                      '& .MuiLinearProgress-bar': {
-                        backgroundColor: theme.palette.success.main,
-                        borderRadius: 4,
-                      },
-                    }}
-                  />
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    75% of savings goal achieved
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </Grid>
-      </Grid>
+                    ))}
+                    {!dashboardData?.recommendations?.length && (
+                      <Typography variant="body2" color="text.secondary">
+                        Add income, expenses, and budgets to receive personalized recommendations.
+                      </Typography>
+                    )}
+                  </Box>
+                  <Box sx={{ mt: 3, p: 2, borderRadius: 2, backgroundColor: alpha(theme.palette.success.main, 0.05) }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Savings Goal Progress (20% target)
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={dashboardData?.savings_goal_progress || 0}
+                      sx={{ height: 8, borderRadius: 4 }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                      {(dashboardData?.savings_goal_progress || 0).toFixed(0)}% of monthly savings goal achieved
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
         </>
       )}
     </Box>

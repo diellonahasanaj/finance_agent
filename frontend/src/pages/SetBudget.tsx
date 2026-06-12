@@ -96,18 +96,15 @@ function SetBudget() {
   };
 
   const categories = [
-    'Food & Dining',
+    'Food',
     'Transportation',
-    'Shopping',
+    'Housing',
+    'Utilities',
     'Entertainment',
-    'Bills & Utilities',
-    'Healthcare',
+    'Health',
     'Education',
-    'Personal Care',
-    'Travel',
-    'Debt Payments',
-    'Savings & Investments',
-    'Other'
+    'Shopping',
+    'Other',
   ];
 
   return (

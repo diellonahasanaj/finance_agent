@@ -4,8 +4,11 @@ Handles file-based storage for financial data.
 """
 import json
 import os
+from collections import defaultdict
 from datetime import datetime
+from typing import Dict, List, Optional
 from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate
+from app.services.expense_classifier import expense_classifier
 from bson import ObjectId
 
 # File-based storage for financial data
@@ -50,10 +53,20 @@ async def add_income(user, income: IncomeCreate):
 async def add_expense(user, expense: ExpenseCreate):
     """
     Add a new expense record for the user.
+    Auto-classifies category from description when not provided or set to Other.
     """
     expenses = load_data(EXPENSES_FILE)
-    
+
     expense_dict = expense.dict()
+    title = expense_dict.get("description") or expense_dict.get("category") or ""
+    classified_category, confidence = expense_classifier.classify_expense(
+        title, expense_dict.get("description") or ""
+    )
+    if not expense_dict.get("category") or expense_dict.get("category") in ("Other", "General"):
+        expense_dict["category"] = classified_category
+    expense_dict["classification_confidence"] = confidence
+    expense_dict["auto_classified"] = expense_dict["category"] == classified_category
+
     expense_dict["_id"] = str(ObjectId())
     expense_dict["user_id"] = str(user["_id"])
     expense_dict["created_at"] = datetime.utcnow()
@@ -141,3 +154,205 @@ async def get_user_debts(user):
     debts = load_data(DEBTS_FILE)
     user_key = user.get("email", str(user["_id"]))
     return debts.get(user_key, [])
+
+
+def _filter_by_month(records: List[dict], month: Optional[str]) -> List[dict]:
+    if not month:
+        return records
+    return [r for r in records if str(r.get("date", "")).startswith(month)]
+
+
+def _category_breakdown(expenses: List[dict]) -> Dict[str, float]:
+    breakdown: Dict[str, float] = defaultdict(float)
+    for expense in expenses:
+        category = expense.get("category", "Other")
+        breakdown[category] += expense.get("amount", 0)
+    return dict(breakdown)
+
+
+def _monthly_trends(
+    incomes: List[dict], expenses: List[dict], months: int = 6
+) -> List[dict]:
+    month_keys: Dict[str, dict] = {}
+    for record in incomes:
+        date = str(record.get("date", ""))
+        if len(date) >= 7:
+            month = date[:7]
+            if month not in month_keys:
+                month_keys[month] = {"month": month, "income": 0.0, "expenses": 0.0}
+            month_keys[month]["income"] += record.get("amount", 0)
+    for record in expenses:
+        date = str(record.get("date", ""))
+        if len(date) >= 7:
+            month = date[:7]
+            if month not in month_keys:
+                month_keys[month] = {"month": month, "income": 0.0, "expenses": 0.0}
+            month_keys[month]["expenses"] += record.get("amount", 0)
+
+    sorted_months = sorted(month_keys.keys())[-months:]
+    trends = []
+    for month in sorted_months:
+        data = month_keys[month]
+        trends.append(
+            {
+                "month": month,
+                "income": data["income"],
+                "expenses": data["expenses"],
+                "savings": data["income"] - data["expenses"],
+            }
+        )
+    return trends
+
+
+async def build_dashboard_data(user, month: Optional[str] = None) -> dict:
+    """Build unified dashboard payload from file-based financial records."""
+    incomes = _filter_by_month(await get_user_incomes(user), month)
+    expenses = _filter_by_month(await get_user_expenses(user), month)
+    budgets = await get_user_budgets(user)
+    debts = await get_user_debts(user)
+
+    if month:
+        budgets = [b for b in budgets if b.get("month") == month]
+
+    total_income = sum(i.get("amount", 0) for i in incomes)
+    total_expenses = sum(e.get("amount", 0) for e in expenses)
+    balance = total_income - total_expenses
+    total_debts = sum(d.get("amount", 0) for d in debts if not d.get("is_paid_off", False))
+    category_breakdown = _category_breakdown(expenses)
+
+    budget_status = []
+    for budget in budgets:
+        category = budget.get("category")
+        category_expenses = category_breakdown.get(category, 0)
+        budget_limit = budget.get("limit", 0)
+        percentage_used = (category_expenses / budget_limit * 100) if budget_limit > 0 else 0
+        budget_status.append(
+            {
+                "category": category,
+                "limit": budget_limit,
+                "spent": category_expenses,
+                "remaining": budget_limit - category_expenses,
+                "percentage_used": percentage_used,
+                "percentage": percentage_used,
+                "month": budget.get("month"),
+            }
+        )
+
+    alerts = []
+    if balance < 0:
+        alerts.append(
+            {
+                "type": "error",
+                "message": "Monthly balance is negative",
+                "reason": f"Total expenses (${total_expenses:.2f}) exceed total income (${total_income:.2f})",
+                "impact": f"You are spending ${abs(balance):.2f} more than you earn this month",
+            }
+        )
+
+    for budget_stat in budget_status:
+        if budget_stat["percentage_used"] > 100:
+            alerts.append(
+                {
+                    "type": "warning",
+                    "message": f"{budget_stat['category']} budget exceeded",
+                    "reason": f"Spent ${budget_stat['spent']:.2f} of ${budget_stat['limit']:.2f} budget",
+                    "impact": f"Over budget by ${budget_stat['spent'] - budget_stat['limit']:.2f}",
+                }
+            )
+        elif budget_stat["percentage_used"] >= 80:
+            alerts.append(
+                {
+                    "type": "info",
+                    "message": f"{budget_stat['category']} budget nearly exceeded",
+                    "reason": f"Used {budget_stat['percentage_used']:.1f}% of budget",
+                    "impact": f"Only ${budget_stat['remaining']:.2f} remaining",
+                }
+            )
+
+    recommendations = []
+    for budget_stat in budget_status:
+        if budget_stat["percentage_used"] > 100:
+            recommendations.append(
+                {
+                    "category": budget_stat["category"],
+                    "title": f"Reduce {budget_stat['category']} spending",
+                    "description": f"Cut back on {budget_stat['category']} by ${budget_stat['spent'] - budget_stat['limit']:.2f}",
+                    "priority": "high",
+                    "reasoning": (
+                        f"You spent ${budget_stat['spent']:.2f} on {budget_stat['category']}, "
+                        f"which exceeds your ${budget_stat['limit']:.2f} budget."
+                    ),
+                }
+            )
+
+    if balance > 0:
+        recommendations.append(
+            {
+                "category": "Savings",
+                "title": "Increase savings",
+                "description": f"You have a surplus of ${balance:.2f}. Consider adding it to savings.",
+                "priority": "medium",
+                "reasoning": f"Your positive balance of ${balance:.2f} can improve financial security.",
+            }
+        )
+
+    savings_target = total_income * 0.20
+    savings_progress = min((balance / savings_target * 100) if savings_target > 0 else 0, 100)
+
+    recent = sorted(
+        expenses + incomes,
+        key=lambda x: x.get("date", ""),
+        reverse=True,
+    )[:8]
+
+    return {
+        "total_income": total_income,
+        "total_expenses": total_expenses,
+        "balance": balance,
+        "net_income": balance,
+        "total_debts": total_debts,
+        "budget_status": budget_status,
+        "budgets": budget_status,
+        "categoryBreakdown": category_breakdown,
+        "alerts": alerts,
+        "recommendations": recommendations,
+        "recent_transactions": recent[:5],
+        "income_count": len(incomes),
+        "expense_count": len(expenses),
+        "budget_count": len(budgets),
+        "debt_count": len([d for d in debts if not d.get("is_paid_off", False)]),
+        "savings_rate": (balance / total_income * 100) if total_income > 0 else 0,
+        "savings_goal_progress": max(savings_progress, 0),
+        "month": month,
+    }
+
+
+async def build_analytics_data(user, months: int = 6) -> dict:
+    """Build analytics payload with real category and trend data."""
+    incomes = await get_user_incomes(user)
+    expenses = await get_user_expenses(user)
+    budgets = await get_user_budgets(user)
+    dashboard = await build_dashboard_data(user)
+
+    category_breakdown = [
+        {"category": cat, "amount": amt}
+        for cat, amt in sorted(
+            _category_breakdown(expenses).items(), key=lambda x: x[1], reverse=True
+        )
+    ]
+
+    total_budget = sum(b.get("limit", 0) for b in budgets)
+    total_spent = sum(e.get("amount", 0) for e in expenses)
+
+    return {
+        "categoryBreakdown": category_breakdown,
+        "monthlyTrends": _monthly_trends(incomes, expenses, months),
+        "budgetStatus": {
+            "total_budget": total_budget,
+            "total_spent": total_spent,
+            "percentage": (total_spent / total_budget * 100) if total_budget > 0 else 0,
+        },
+        "savingsRate": dashboard["savings_rate"],
+        "total_income": dashboard["total_income"],
+        "total_expenses": dashboard["total_expenses"],
+    }

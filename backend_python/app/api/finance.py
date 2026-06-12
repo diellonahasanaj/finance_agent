@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, File, HTTPException
 from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate
-from app.services.finance_service import add_income, add_expense, set_budget, add_debt, get_user_incomes, get_user_expenses, get_user_budgets, get_user_debts
+from app.services.finance_service import (
+    add_income, add_expense, set_budget, add_debt,
+    get_user_incomes, get_user_expenses, get_user_budgets, get_user_debts,
+    build_dashboard_data, build_analytics_data,
+)
 from app.services.data_handling import data_handler
 from app.services.expense_analysis import expense_analyzer
 from app.services.decision_engine import decision_engine
@@ -51,105 +55,25 @@ async def get_debts(user=Depends(get_current_user)):
     return await get_user_debts(user)
 
 @router.get("/dashboard")
-async def get_dashboard_data(user=Depends(get_current_user)):
-    """Get comprehensive dashboard data with AI insights."""
+async def get_dashboard_data(
+    month: Optional[str] = Query(None, description="Filter by month (YYYY-MM)"),
+    user=Depends(get_current_user),
+):
+    """Get comprehensive dashboard data with alerts and recommendations."""
     try:
-        incomes = await get_user_incomes(user)
-        expenses = await get_user_expenses(user)
-        budgets = await get_user_budgets(user)
-        debts = await get_user_debts(user)
-        
-        # Calculate totals
-        total_income = sum(income.get('amount', 0) for income in incomes)
-        total_expenses = sum(expense.get('amount', 0) for expense in expenses)
-        balance = total_income - total_expenses
-        
-        # Analyze budget status
-        budget_analysis = []
-        for budget in budgets:
-            category_expenses = sum(
-                expense.get('amount', 0) 
-                for expense in expenses 
-                if expense.get('category') == budget.get('category')
-            )
-            budget_limit = budget.get('limit', 0)
-            percentage_used = (category_expenses / budget_limit * 100) if budget_limit > 0 else 0
-            
-            budget_analysis.append({
-                'category': budget.get('category'),
-                'limit': budget_limit,
-                'spent': category_expenses,
-                'remaining': budget_limit - category_expenses,
-                'percentage_used': percentage_used
-            })
-        
-        # Generate alerts
-        alerts = []
-        
-        # Balance alert
-        if balance < 0:
-            alerts.append({
-                'type': 'error',
-                'message': 'Monthly balance is negative',
-                'reason': f'Total expenses (${total_expenses:.2f}) exceed total income (${total_income:.2f})',
-                'impact': f'You are spending ${abs(balance):.2f} more than you earn this month',
-                'data': {'balance': balance, 'total_income': total_income, 'total_expenses': total_expenses}
-            })
-        
-        # Budget alerts
-        for budget_stat in budget_analysis:
-            if budget_stat['percentage_used'] > 100:
-                alerts.append({
-                    'type': 'warning',
-                    'message': f"{budget_stat['category']} budget exceeded",
-                    'reason': f"Spent ${budget_stat['spent']:.2f} of ${budget_stat['limit']:.2f} budget",
-                    'impact': f"Over budget by ${budget_stat['spent'] - budget_stat['limit']:.2f}",
-                    'data': budget_stat
-                })
-            elif budget_stat['percentage_used'] > 80:
-                alerts.append({
-                    'type': 'info',
-                    'message': f"{budget_stat['category']} budget nearly exceeded",
-                    'reason': f"Used {budget_stat['percentage_used']:.1f}% of budget",
-                    'impact': f"Only ${budget_stat['remaining']:.2f} remaining",
-                    'data': budget_stat
-                })
-        
-        # Generate recommendations
-        recommendations = []
-        
-        # Budget recommendations
-        for budget_stat in budget_analysis:
-            if budget_stat['percentage_used'] > 100:
-                recommendations.append({
-                    'category': budget_stat['category'],
-                    'title': f"Reduce {budget_stat['category']} spending",
-                    'description': f"Consider cutting back on {budget_stat['category']} expenses by ${budget_stat['spent'] - budget_stat['limit']:.2f}",
-                    'priority': 'high',
-                    'potential_savings': budget_stat['spent'] - budget_stat['limit'],
-                    'reasoning': f"You spent ${budget_stat['spent']:.2f} on {budget_stat['category']}, which is ${budget_stat['spent'] - budget_stat['limit']:.2f} over your budget of ${budget_stat['limit']:.2f}"
-                })
-        
-        # Savings recommendations
-        if balance > 0:
-            recommendations.append({
-                'category': 'Savings',
-                'title': 'Increase savings',
-                'description': f"You have a surplus of ${balance:.2f}. Consider adding this to your emergency fund or investments.",
-                'priority': 'medium',
-                'potential_savings': balance,
-                'reasoning': f"Your positive balance of ${balance:.2f} can be used to build financial security"
-            })
-        
-        return {
-            'total_income': total_income,
-            'total_expenses': total_expenses,
-            'balance': balance,
-            'budget_status': budget_analysis,
-            'alerts': alerts,
-            'recommendations': recommendations,
-            'recent_transactions': sorted(expenses, key=lambda x: x.get('date', ''), reverse=True)[:5]
-        }
+        return await build_dashboard_data(user, month)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/analytics")
+async def get_analytics_data(
+    months: int = Query(default=6, description="Number of months for trend analysis"),
+    user=Depends(get_current_user),
+):
+    """Get analytics data for charts and visualizations."""
+    try:
+        return await build_analytics_data(user, months)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -537,100 +461,6 @@ async def get_comprehensive_recommendations(user=Depends(get_current_user)):
     """Get comprehensive recommendations with detailed explanations."""
     comprehensive = await recommendation_engine.generate_comprehensive_recommendations(user["_id"])
     return comprehensive
-
-# Data retrieval endpoints
-@router.get("/expenses")
-async def get_expenses(
-    month: Optional[str] = Query(None, description="Filter by month (YYYY-MM)"),
-    category: Optional[str] = Query(None, description="Filter by category"),
-    user=Depends(get_current_user)
-):
-    """Get user's expenses with optional filtering."""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    from app.core.config import settings
-    
-    client = AsyncIOMotorClient(settings.MONGO_URI)
-    db = client.get_default_database()
-    
-    query = {"user_id": user["_id"]}
-    if month:
-        query["date"] = {"$regex": f"^{month}"}
-    if category:
-        query["category"] = category
-    
-    expenses = await db["expenses"].find(query).to_list(length=None)
-    
-    # Convert ObjectId to string for JSON serialization
-    for expense in expenses:
-        expense["_id"] = str(expense["_id"])
-    
-    return {"expenses": expenses, "count": len(expenses)}
-
-@router.get("/income")
-async def get_income(
-    month: Optional[str] = Query(None, description="Filter by month (YYYY-MM)"),
-    user=Depends(get_current_user)
-):
-    """Get user's income with optional filtering."""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    from app.core.config import settings
-    
-    client = AsyncIOMotorClient(settings.MONGO_URI)
-    db = client.get_default_database()
-    
-    query = {"user_id": user["_id"]}
-    if month:
-        query["date"] = {"$regex": f"^{month}"}
-        
-    incomes = await db["incomes"].find(query).to_list(length=None)
-    
-    # Convert ObjectId to string for JSON serialization
-    for income in incomes:
-        income["_id"] = str(income["_id"])
-    
-    return {"income": incomes, "count": len(incomes)}
-
-@router.get("/budgets")
-async def get_budgets(
-    month: Optional[str] = Query(None, description="Filter by month (YYYY-MM)"),
-    user=Depends(get_current_user)
-):
-    """Get user's budgets with optional filtering."""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    from app.core.config import settings
-    
-    client = AsyncIOMotorClient(settings.MONGO_URI)
-    db = client.get_default_database()
-    
-    query = {"user_id": user["_id"]}
-    if month:
-        query["month"] = month
-    
-    budgets = await db["budgets"].find(query).to_list(length=None)
-    
-    # Convert ObjectId to string for JSON serialization
-    for budget in budgets:
-        budget["_id"] = str(budget["_id"])
-    
-    return {"budgets": budgets, "count": len(budgets)}
-
-@router.get("/debts")
-async def get_debts(user=Depends(get_current_user)):
-    """Get user's debts."""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    from app.core.config import settings
-    
-    client = AsyncIOMotorClient(settings.MONGO_URI)
-    db = client.get_default_database()
-    
-    query = {"user_id": user["_id"], "is_paid_off": False}
-    debts = await db["debts"].find(query).to_list(length=None)
-    
-    # Convert ObjectId to string for JSON serialization
-    for debt in debts:
-        debt["_id"] = str(debt["_id"])
-    
-    return {"debts": debts, "count": len(debts)}
 
 # Financial health endpoints
 @router.get("/health/score")

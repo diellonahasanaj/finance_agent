@@ -16,19 +16,29 @@ def load_users():
     return {}
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    # For now, just return a dummy user since we're using dummy tokens
-    # In production, this would decode the JWT and find the user
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     users = load_users()
-    if users:
-        # Return the first user for simplicity
-        user_data = list(users.values())[0]
-        return user_data
-    else:
-        # If no users exist, create a dummy one
-        return {
-            "_id": "dummy_user",
-            "name": "Dummy User",
-            "email": "dummy@example.com",
-            "is_active": True,
-            "is_verified": True
-        }
+    for user_data in users.values():
+        if str(user_data.get("_id")) == str(user_id):
+            return user_data
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="User not found",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
