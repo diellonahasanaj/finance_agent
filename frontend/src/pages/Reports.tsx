@@ -25,7 +25,6 @@ import {
   Send,
   Refresh
 } from '@mui/icons-material';
-// @ts-ignore
 import API from '../services/api';
 
 interface FinancialData {

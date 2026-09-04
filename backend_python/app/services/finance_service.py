@@ -7,7 +7,7 @@ import os
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional
-from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate
+from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate, IncomeUpdate, ExpenseUpdate
 from app.services.expense_classifier import expense_classifier
 from bson import ObjectId
 
@@ -156,6 +156,173 @@ async def get_user_debts(user):
     return debts.get(user_key, [])
 
 
+def _user_key(user) -> str:
+    return user.get("email", str(user["_id"]))
+
+
+async def update_expense(user, expense_id: str, update: ExpenseUpdate):
+    """Update an existing expense record."""
+    expenses = load_data(EXPENSES_FILE)
+    user_key = _user_key(user)
+    user_expenses = expenses.get(user_key, [])
+
+    for i, expense in enumerate(user_expenses):
+        if expense.get("_id") == expense_id:
+            updated = {**expense}
+            for field, value in update.dict(exclude_unset=True).items():
+                if value is not None:
+                    updated[field] = value
+            if update.description or update.category:
+                title = updated.get("description") or updated.get("category") or ""
+                classified_category, confidence = expense_classifier.classify_expense(
+                    title, updated.get("description") or ""
+                )
+                if update.category in (None, "Other", "General"):
+                    updated["category"] = classified_category
+                updated["classification_confidence"] = confidence
+            updated["updated_at"] = datetime.utcnow()
+            user_expenses[i] = updated
+            expenses[user_key] = user_expenses
+            save_data(EXPENSES_FILE, expenses)
+            return updated
+
+    return None
+
+
+async def delete_expense(user, expense_id: str) -> bool:
+    """Delete an expense record."""
+    expenses = load_data(EXPENSES_FILE)
+    user_key = _user_key(user)
+    user_expenses = expenses.get(user_key, [])
+    filtered = [e for e in user_expenses if e.get("_id") != expense_id]
+    if len(filtered) == len(user_expenses):
+        return False
+    expenses[user_key] = filtered
+    save_data(EXPENSES_FILE, expenses)
+    return True
+
+
+async def update_income(user, income_id: str, update: IncomeUpdate):
+    """Update an existing income record."""
+    incomes = load_data(INCOMES_FILE)
+    user_key = _user_key(user)
+    user_incomes = incomes.get(user_key, [])
+
+    for i, income in enumerate(user_incomes):
+        if income.get("_id") == income_id:
+            updated = {**income}
+            for field, value in update.dict(exclude_unset=True).items():
+                if value is not None:
+                    updated[field] = value
+            updated["updated_at"] = datetime.utcnow()
+            user_incomes[i] = updated
+            incomes[user_key] = user_incomes
+            save_data(INCOMES_FILE, incomes)
+            return updated
+
+    return None
+
+
+async def delete_income(user, income_id: str) -> bool:
+    """Delete an income record."""
+    incomes = load_data(INCOMES_FILE)
+    user_key = _user_key(user)
+    user_incomes = incomes.get(user_key, [])
+    filtered = [i for i in user_incomes if i.get("_id") != income_id]
+    if len(filtered) == len(user_incomes):
+        return False
+    incomes[user_key] = filtered
+    save_data(INCOMES_FILE, incomes)
+    return True
+
+
+async def get_category_statistics(user, month: Optional[str] = None) -> dict:
+    """Get expense and income category statistics."""
+    expenses = _filter_by_month(await get_user_expenses(user), month)
+    incomes = _filter_by_month(await get_user_incomes(user), month)
+
+    expense_stats = _category_breakdown(expenses)
+    income_stats: Dict[str, float] = defaultdict(float)
+    for income in incomes:
+        source = income.get("source", "Other")
+        income_stats[source] += income.get("amount", 0)
+
+    return {
+        "expense_categories": [
+            {"category": k, "amount": v, "type": "expense"}
+            for k, v in sorted(expense_stats.items(), key=lambda x: x[1], reverse=True)
+        ],
+        "income_categories": [
+            {"category": k, "amount": v, "type": "income"}
+            for k, v in sorted(income_stats.items(), key=lambda x: x[1], reverse=True)
+        ],
+        "total_expenses": sum(expense_stats.values()),
+        "total_income": sum(income_stats.values()),
+    }
+
+
+async def get_transactions(
+    user,
+    type_filter: Optional[str] = None,
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    month: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 10,
+) -> dict:
+    """Get paginated, filterable list of all transactions."""
+    incomes = await get_user_incomes(user)
+    expenses = await get_user_expenses(user)
+
+    transactions = []
+    for income in incomes:
+        transactions.append({**income, "type": "income", "label": income.get("source", "Income")})
+    for expense in expenses:
+        transactions.append({
+            **expense,
+            "type": "expense",
+            "label": expense.get("description") or expense.get("category", "Expense"),
+        })
+
+    if type_filter in ("income", "expense"):
+        transactions = [t for t in transactions if t["type"] == type_filter]
+
+    if month:
+        transactions = [t for t in transactions if str(t.get("date", "")).startswith(month)]
+
+    if category:
+        transactions = [
+            t for t in transactions
+            if t.get("category", "").lower() == category.lower()
+            or t.get("source", "").lower() == category.lower()
+        ]
+
+    if search:
+        query = search.lower()
+        transactions = [
+            t for t in transactions
+            if query in str(t.get("label", "")).lower()
+            or query in str(t.get("category", "")).lower()
+            or query in str(t.get("source", "")).lower()
+            or query in str(t.get("description", "")).lower()
+            or query in str(t.get("amount", ""))
+        ]
+
+    transactions.sort(key=lambda x: x.get("date", ""), reverse=True)
+
+    total = len(transactions)
+    start = (page - 1) * page_size
+    end = start + page_size
+
+    return {
+        "items": transactions[start:end],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": max(1, (total + page_size - 1) // page_size),
+    }
+
+
 def _filter_by_month(records: List[dict], month: Optional[str]) -> List[dict]:
     if not month:
         return records
@@ -296,7 +463,7 @@ async def build_dashboard_data(user, month: Optional[str] = None) -> dict:
             }
         )
 
-    savings_target = total_income * 0.20
+    savings_target = user.get("savings_goal") or (total_income * 0.20)
     savings_progress = min((balance / savings_target * 100) if savings_target > 0 else 0, 100)
 
     recent = sorted(

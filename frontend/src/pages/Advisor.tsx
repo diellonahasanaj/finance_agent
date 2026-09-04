@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   Container,
@@ -7,7 +7,6 @@ import {
   Paper,
   Card,
   CardContent,
-  Button,
   Stack,
   Alert,
   Divider,
@@ -23,7 +22,6 @@ import AdvisorChat from '../components/dashboard/AdvisorChat';
 
 const Advisor: React.FC = () => {
   const theme = useTheme();
-  const [showChat, setShowChat] = useState(true);
 
   const tips = [
     {
@@ -67,7 +65,7 @@ const Advisor: React.FC = () => {
       <Grid container spacing={3}>
         {/* Chat Section */}
         <Grid item xs={12} md={8}>
-          {showChat && <AdvisorChat />}
+          <AdvisorChat />
         </Grid>
 
         {/* Tips Section */}

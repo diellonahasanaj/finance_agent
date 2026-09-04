@@ -7,7 +7,7 @@ import asyncio
 import json
 import os
 from datetime import datetime, timedelta
-from app.schemas.user import UserCreate, UserOut, UserResponse
+from app.schemas.user import UserCreate, UserOut, UserResponse, UserProfileUpdate, ChangePassword
 from app.utils.password import hash_password, verify_password
 from app.core.config import settings
 from bson import ObjectId
@@ -87,7 +87,10 @@ async def register_user(user: UserCreate) -> UserResponse:
         "password_reset_token": None,
         "password_reset_expires": None,
         "created_at": datetime.utcnow(),
-        "last_login": None
+        "last_login": None,
+        "monthly_income": None,
+        "savings_goal": None,
+        "currency": "USD",
     }
     
     # Save user
@@ -95,14 +98,7 @@ async def register_user(user: UserCreate) -> UserResponse:
     save_users(users)
     
     # Create user response
-    user_out = UserOut(
-        id=user_dict["_id"],
-        name=user.name,
-        email=user.email.lower(),
-        is_active=user_dict["is_active"],
-        is_verified=user_dict["is_verified"],
-        created_at=user_dict["created_at"]
-    )
+    user_out = user_data_to_out(user_dict)
     
     return UserResponse(
         success=True,
@@ -173,21 +169,203 @@ async def authenticate_user(email: str, password: str, remember_me: bool = False
     users[email.lower()] = user_data
     save_users(users)
     
-    # Create user response
-    user_out = UserOut(
+    return UserResponse(
+        success=True,
+        message="Login successful!",
+        user=user_data_to_out(user_data),
+        access_token="dummy_token",
+        token_type="bearer",
+        expires_in=86400,
+    )
+
+
+def user_data_to_out(user_data: dict) -> UserOut:
+    """Convert stored user dict to UserOut schema."""
+    return UserOut(
         id=user_data["_id"],
         name=user_data["name"],
         email=user_data["email"],
         is_active=user_data.get("is_active", True),
         is_verified=user_data.get("is_verified", False),
-        created_at=user_data.get("created_at")
+        created_at=user_data.get("created_at"),
+        last_login=user_data.get("last_login"),
+        monthly_income=user_data.get("monthly_income"),
+        savings_goal=user_data.get("savings_goal"),
+        currency=user_data.get("currency", "USD"),
     )
+
+
+async def update_user_profile(email: str, profile: UserProfileUpdate) -> UserResponse:
+    """Update user profile and financial preferences."""
+    users = load_users()
+    user_data = users.get(email.lower())
+    if not user_data:
+        return UserResponse(success=False, message="User not found.", user=None)
+
+    if profile.name is not None:
+        user_data["name"] = profile.name.strip()
+    if profile.monthly_income is not None:
+        user_data["monthly_income"] = profile.monthly_income
+    if profile.savings_goal is not None:
+        user_data["savings_goal"] = profile.savings_goal
+    if profile.currency is not None:
+        user_data["currency"] = profile.currency.upper()
+
+    users[email.lower()] = user_data
+    save_users(users)
+
+    return UserResponse(
+        success=True,
+        message="Profile updated successfully.",
+        user=user_data_to_out(user_data),
+    )
+
+
+async def change_user_password(email: str, current_password: str, new_password: str) -> UserResponse:
+    """Change user password after verifying current password."""
+    users = load_users()
+    user_data = users.get(email.lower())
+    if not user_data:
+        return UserResponse(success=False, message="User not found.", user=None)
+
+    if not await verify_password(current_password, user_data["hashed_password"]):
+        return UserResponse(success=False, message="Current password is incorrect.", user=None)
+
+    user_data["hashed_password"] = await hash_password(new_password)
+    users[email.lower()] = user_data
+    save_users(users)
+
+    return UserResponse(success=True, message="Password changed successfully.", user=user_data_to_out(user_data))
+
+
+async def request_password_reset(email: str) -> UserResponse:
+    """
+    Request password reset for user email.
+    In demo mode, returns the reset token in the response for testing.
+    In production, this would send an email with the reset link.
+    """
+    users = load_users()
+    user_data = users.get(email.lower())
+    
+    if not user_data:
+        # For security, don't reveal if email exists
+        return UserResponse(
+            success=True,
+            message="If an account with this email exists, a password reset link has been sent.",
+            user=None
+        )
+    
+    # Generate reset token
+    reset_token = secrets.token_urlsafe(32)
+    user_data["password_reset_token"] = reset_token
+    user_data["password_reset_expires"] = datetime.utcnow() + timedelta(hours=1)
+    
+    # Save updated user data
+    users[email.lower()] = user_data
+    save_users(users)
+    
+    # In demo mode, return the token for testing
+    # In production, this would send an email instead
+    return UserResponse(
+        success=True,
+        message=f"Password reset link sent to {email}. (Demo mode: token={reset_token})",
+        user=None
+    )
+
+
+async def reset_password(token: str, new_password: str) -> UserResponse:
+    """
+    Reset user password using reset token.
+    Validates the token and updates the password if valid.
+    """
+    users = load_users()
+    
+    # Find user with matching reset token
+    user_email = None
+    user_data = None
+    
+    for email, data in users.items():
+        if data.get("password_reset_token") == token:
+            user_email = email
+            user_data = data
+            break
+    
+    if not user_data:
+        return UserResponse(
+            success=False,
+            message="Invalid or expired reset token.",
+            user=None
+        )
+    
+    # Check if token is expired
+    if user_data.get("password_reset_expires") and datetime.utcnow() > user_data["password_reset_expires"]:
+        return UserResponse(
+            success=False,
+            message="Reset token has expired. Please request a new password reset.",
+            user=None
+        )
+    
+    # Update password
+    user_data["hashed_password"] = await hash_password(new_password)
+    user_data["password_reset_token"] = None
+    user_data["password_reset_expires"] = None
+    user_data["login_attempts"] = 0  # Reset login attempts
+    user_data["locked_until"] = None  # Unlock account if it was locked
+    
+    # Save updated user data
+    users[user_email] = user_data
+    save_users(users)
     
     return UserResponse(
         success=True,
-        message="Login successful!",
-        user=user_out,
-        access_token="dummy_token",  # In production, this would be a real JWT
-        token_type="bearer",
-        expires_in=86400  # 24 hours
+        message="Password has been reset successfully. You can now log in with your new password.",
+        user=user_data_to_out(user_data)
+    )
+
+
+async def verify_email(token: str) -> UserResponse:
+    """
+    Verify user email using verification token.
+    In demo mode, auto-verification is enabled by default.
+    """
+    users = load_users()
+    
+    # Find user with matching verification token
+    user_email = None
+    user_data = None
+    
+    for email, data in users.items():
+        if data.get("verification_token") == token:
+            user_email = email
+            user_data = data
+            break
+    
+    if not user_data:
+        return UserResponse(
+            success=False,
+            message="Invalid or expired verification token.",
+            user=None
+        )
+    
+    # Check if token is expired
+    if user_data.get("verification_expires") and datetime.utcnow() > user_data["verification_expires"]:
+        return UserResponse(
+            success=False,
+            message="Verification token has expired. Please request a new verification email.",
+            user=None
+        )
+    
+    # Mark user as verified
+    user_data["is_verified"] = True
+    user_data["verification_token"] = None
+    user_data["verification_expires"] = None
+    
+    # Save updated user data
+    users[user_email] = user_data
+    save_users(users)
+    
+    return UserResponse(
+        success=True,
+        message="Email verified successfully! You can now log in.",
+        user=user_data_to_out(user_data)
     )

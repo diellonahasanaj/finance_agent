@@ -145,12 +145,6 @@ function Dashboard() {
       ]
     : [];
 
-  const alertColor = (type: string) => {
-    if (type === "error") return theme.palette.error.main;
-    if (type === "warning") return theme.palette.warning.main;
-    return theme.palette.info.main;
-  };
-
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
       {loading ? (

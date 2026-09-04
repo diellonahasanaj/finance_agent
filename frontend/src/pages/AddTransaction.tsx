@@ -1,22 +1,21 @@
 import { useState } from "react";
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  TextField, 
-  Button, 
-  Grid, 
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Grid,
   Card,
   CardContent,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  useTheme
+  Alert,
+  useTheme,
 } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-// @ts-ignore
 import API from '../services/api';
 
 function AddTransaction() {
@@ -32,6 +31,13 @@ function AddTransaction() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const expenseCategories = [
+    'Food', 'Transportation', 'Housing', 'Utilities',
+    'Entertainment', 'Health', 'Education', 'Shopping', 'Other',
+  ];
+  const incomeSources = ['Salary', 'Freelance', 'Investment', 'Bonus', 'Other'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +59,8 @@ function AddTransaction() {
 
       const endpoint = type === 'income' ? '/finance/income' : '/finance/expense';
       await API.post(endpoint, data);
-      
-      // Navigate back to dashboard
-      navigate('/dashboard');
+      setSuccess(true);
+      setTimeout(() => navigate('/transactions'), 1200);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to add transaction');
     } finally {
@@ -86,9 +91,11 @@ function AddTransaction() {
           </Typography>
 
           {error && (
-            <Typography color="error" sx={{ mb: 2 }}>
-              {error}
-            </Typography>
+            <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+          )}
+
+          {success && (
+            <Alert severity="success" sx={{ mb: 2 }}>Transaction added successfully!</Alert>
           )}
 
           <Box component="form" onSubmit={handleSubmit}>
@@ -112,7 +119,7 @@ function AddTransaction() {
                   fullWidth
                   label="Amount"
                   type="number"
-                  step="0.01"
+                  inputProps={{ step: "0.01", min: 0 }}
                   required
                   value={formData.amount}
                   onChange={handleChange('amount')}
@@ -133,13 +140,14 @@ function AddTransaction() {
               {type === 'expense' ? (
                 <>
                   <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Category"
-                      value={formData.category}
-                      onChange={handleChange('category')}
-                      placeholder="e.g., Food, Transport, Entertainment"
-                    />
+                    <FormControl fullWidth>
+                      <InputLabel>Category</InputLabel>
+                      <Select value={formData.category} label="Category" onChange={handleChange('category')}>
+                        {expenseCategories.map((c) => (
+                          <MenuItem key={c} value={c}>{c}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   </Grid>
 
                   <Grid item xs={12} md={6}>
@@ -154,13 +162,14 @@ function AddTransaction() {
                 </>
               ) : (
                 <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Source"
-                    value={formData.source}
-                    onChange={handleChange('source')}
-                    placeholder="e.g., Salary, Freelance, Investment"
-                  />
+                  <FormControl fullWidth>
+                    <InputLabel>Source</InputLabel>
+                    <Select value={formData.source} label="Source" onChange={handleChange('source')}>
+                      {incomeSources.map((s) => (
+                        <MenuItem key={s} value={s}>{s}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </Grid>
               )}
 

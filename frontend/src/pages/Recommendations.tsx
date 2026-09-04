@@ -11,9 +11,8 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  LinearProgress,
-  useTheme,
   alpha,
+  useTheme,
 } from "@mui/material";
 import {
   Lightbulb,

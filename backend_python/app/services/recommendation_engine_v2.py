@@ -122,9 +122,10 @@ class FinancialRecommendationEngine:
                     'title': f'{category} Budget Exceeded',
                     'recommendation': f'You have exceeded your {category} budget limit.',
                     'explanation': (
-                        f'You spent ${spent:.2f} of your ${limit:.2f} {category} budget. '
-                        f'This represents {percentage_used:.1f}% of your budget. '
-                        f'Consider reducing {category} expenses or adjusting your budget.'
+                        f'You exceeded your {category} budget by {percentage_used - 100:.0f}% this month '
+                        f'(${spent:.2f} spent vs ${limit:.2f} budget). '
+                        f'Reducing {category} expenses by approximately ${spent - limit:.2f} '
+                        f'would allow you to stay within your planned monthly budget.'
                     ),
                     'potential_savings': spent - limit,
                     'priority': RecommendationPriority.HIGH,

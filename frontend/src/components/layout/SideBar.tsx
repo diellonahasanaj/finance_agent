@@ -20,7 +20,11 @@ import {
   Analytics,
   Chat,
   Visibility,
+  ListAlt,
   Settings,
+  AccountBalanceWallet,
+  CreditCard,
+  CloudUpload,
 } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -28,9 +32,12 @@ const DRAWER_WIDTH = 260;
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: <Dashboard /> },
-  { label: "Add Expense", path: "/add-expense", icon: <AddCircle /> },
+  { label: "Transactions", path: "/transactions", icon: <ListAlt /> },
+  { label: "Income", path: "/income", icon: <AccountBalanceWallet /> },
+  { label: "Debt", path: "/debt", icon: <CreditCard /> },
   { label: "Add Transaction", path: "/add-transaction", icon: <AddCircle /> },
   { label: "Set Budget", path: "/set-budget", icon: <AccountBalance /> },
+  { label: "Data Management", path: "/data-management", icon: <CloudUpload /> },
   { label: "Reports", path: "/reports", icon: <Assessment /> },
   { label: "Recommendations", path: "/recommendations", icon: <Lightbulb /> },
   { label: "Analytics", path: "/analytics", icon: <Analytics /> },

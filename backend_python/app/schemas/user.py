@@ -39,6 +39,9 @@ class UserOut(BaseModel):
     is_verified: bool = False
     created_at: datetime
     last_login: Optional[datetime] = None
+    monthly_income: Optional[float] = None
+    savings_goal: Optional[float] = None
+    currency: str = "USD"
     
     class Config:
         from_attributes = True
@@ -76,3 +79,25 @@ class PasswordResetConfirm(BaseModel):
 
 class EmailVerification(BaseModel):
     token: str = Field(..., description="Email verification token")
+
+class UserProfileUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=2, max_length=100)
+    monthly_income: Optional[float] = Field(default=None, ge=0)
+    savings_goal: Optional[float] = Field(default=None, ge=0)
+    currency: Optional[str] = Field(default=None, min_length=3, max_length=3)
+
+class ChangePassword(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+    @validator('new_password')
+    def validate_new_password(cls, v):
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not re.search(r'[a-z]', v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not re.search(r'\d', v):
+            raise ValueError('Password must contain at least one number')
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
+            raise ValueError('Password must contain at least one special character')
+        return v

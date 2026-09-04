@@ -17,7 +17,6 @@ import {
 } from '@mui/material';
 import { ArrowBack, Save, TrendingUp } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-// @ts-ignore
 import API from '../services/api';
 
 interface Budget {

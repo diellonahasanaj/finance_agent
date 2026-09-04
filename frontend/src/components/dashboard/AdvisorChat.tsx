@@ -14,7 +14,6 @@ import {
   IconButton,
   Tooltip,
   useTheme,
-  useMediaQuery,
 } from '@mui/material';
 import {
   Send as SendIcon,
@@ -23,7 +22,6 @@ import {
   SmartToy as BotIcon,
   Person as UserIcon,
 } from '@mui/icons-material';
-// @ts-ignore
 import API from '../../services/api';
 
 interface ChatMessage {
@@ -34,11 +32,6 @@ interface ChatMessage {
   data?: any;
 }
 
-interface AdvisorMessage {
-  message: string;
-  response: string;
-  data?: any;
-}
 
 interface AdvisorChatProps {
   onClose?: () => void;
@@ -47,7 +40,6 @@ interface AdvisorChatProps {
 
 const AdvisorChat: React.FC<AdvisorChatProps> = ({ onClose, compact = false }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

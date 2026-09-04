@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
-from app.schemas.user import UserCreate, UserOut, UserLogin, UserResponse, PasswordReset, PasswordResetConfirm, EmailVerification
-from app.services.user_service import register_user, authenticate_user, get_user_by_email
+from app.schemas.user import UserCreate, UserOut, UserLogin, UserResponse, PasswordReset, PasswordResetConfirm, EmailVerification, UserProfileUpdate, ChangePassword
+from app.services.user_service import register_user, authenticate_user, get_user_by_email, update_user_profile, change_user_password, user_data_to_out, request_password_reset, reset_password, verify_email
 from app.utils.jwt import create_access_token
 from app.utils.auth import get_current_user
 from app.core.config import settings
@@ -170,7 +170,26 @@ async def get_current_user_profile(current_user = Depends(get_current_user)):
     """
     Get current user profile.
     """
-    return UserOut(**current_user)
+    return user_data_to_out(current_user)
+
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(profile: UserProfileUpdate, current_user=Depends(get_current_user)):
+    """Update user profile and financial preferences."""
+    result = await update_user_profile(current_user["email"], profile)
+    if not result.success:
+        raise HTTPException(status_code=400, detail=result.message)
+    return result
+
+
+@router.post("/change-password", response_model=UserResponse)
+async def change_password(data: ChangePassword, current_user=Depends(get_current_user)):
+    """Change the current user's password."""
+    result = await change_user_password(current_user["email"], data.current_password, data.new_password)
+    if not result.success:
+        raise HTTPException(status_code=400, detail=result.message)
+    return result
+
 
 @router.post("/forgot-password")
 async def forgot_password(request: dict):

@@ -17,6 +17,10 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
+import Transactions from "./pages/Transactions";
+import Income from "./pages/Income";
+import Debt from "./pages/Debt";
+import DataManagement from "./pages/DataManagement";
 
 import SideBar from "./components/layout/SideBar";
 import lightTheme from "./theme/theme";
@@ -30,7 +34,6 @@ interface User {
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : false;
@@ -64,46 +67,31 @@ function App() {
 
   // Check if user is logged in (token in localStorage)
   useEffect(() => {
-    console.log("🔍 Checking authentication...");
     const token = localStorage.getItem("token");
-    console.log("🔑 Token found:", !!token);
-    
     let foundUser: User | null = null;
 
     if (token) {
       try {
         const userData = localStorage.getItem("user");
-        console.log("👤 User data found:", !!userData);
         if (userData) {
           foundUser = JSON.parse(userData);
-          console.log("✅ Parsed user:", foundUser);
         }
-      } catch (error) {
-        console.error("❌ Error parsing user data:", error);
+      } catch {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
       }
     }
 
-    // Set auth state immediately without timeout
-    console.log("🚀 Setting auth state:", { user: foundUser, authChecked: true });
     setUser(foundUser);
-    setAuthChecked(true);
   }, []);
 
   // Handle registration success message
   useEffect(() => {
-    const state = location.state as any;
+    const state = location.state as { message?: string } | null;
     if (state?.message) {
-      // You could show a toast notification here
-      console.log("📧 Registration message:", state.message);
-      // Clear the state to prevent showing the message again
       window.history.replaceState({}, document.title);
     }
   }, [location]);
-
-  // Always render something, even during auth check
-  console.log("🎨 Rendering App with user:", user, "authChecked:", authChecked);
 
   return (
     <ThemeProvider theme={theme}>
@@ -123,6 +111,10 @@ function App() {
             <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
             <Route path="/add-expense" element={user ? <AddExpense /> : <Navigate to="/login" />} />
             <Route path="/add-transaction" element={user ? <AddTransaction /> : <Navigate to="/login" />} />
+            <Route path="/transactions" element={user ? <Transactions /> : <Navigate to="/login" />} />
+            <Route path="/income" element={user ? <Income /> : <Navigate to="/login" />} />
+            <Route path="/debt" element={user ? <Debt /> : <Navigate to="/login" />} />
+            <Route path="/data-management" element={user ? <DataManagement /> : <Navigate to="/login" />} />
             <Route path="/set-budget" element={user ? <SetBudget /> : <Navigate to="/login" />} />
             <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" />} />
             <Route path="/advisor" element={user ? <Advisor /> : <Navigate to="/login" />} />

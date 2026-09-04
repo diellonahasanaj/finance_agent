@@ -18,7 +18,6 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import AuthCard from '../components/auth/AuthCard';
-// @ts-ignore
 import API from '../services/api';
 
 interface FormErrors {

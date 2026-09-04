@@ -27,7 +27,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Refresh, TrendingUp, TrendingDown } from "@mui/icons-material";
-import { motion } from "framer-motion";
 import API from "../services/api";
 
 interface CategoryData {

@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, File, HTTPException
-from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate
+from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate, IncomeUpdate, ExpenseUpdate
 from app.services.finance_service import (
     add_income, add_expense, set_budget, add_debt,
     get_user_incomes, get_user_expenses, get_user_budgets, get_user_debts,
     build_dashboard_data, build_analytics_data,
+    update_expense, delete_expense, update_income, delete_income,
+    get_transactions, get_category_statistics,
 )
 from app.services.data_handling import data_handler
 from app.services.expense_analysis import expense_analyzer
@@ -14,6 +16,7 @@ from app.services.alerts_service import alerts_manager
 from app.utils.auth import get_current_user
 from typing import Optional
 from datetime import datetime
+import os
 
 router = APIRouter()
 
@@ -27,6 +30,22 @@ async def get_incomes(user=Depends(get_current_user)):
     """Get all user's income records."""
     return await get_user_incomes(user)
 
+@router.put("/income/{income_id}")
+async def update_income_record(income_id: str, update: IncomeUpdate, user=Depends(get_current_user)):
+    """Update an income record."""
+    result = await update_income(user, income_id, update)
+    if not result:
+        raise HTTPException(status_code=404, detail="Income not found")
+    return result
+
+@router.delete("/income/{income_id}")
+async def delete_income_record(income_id: str, user=Depends(get_current_user)):
+    """Delete an income record."""
+    deleted = await delete_income(user, income_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Income not found")
+    return {"message": "Income deleted successfully"}
+
 @router.post("/expense")
 async def create_expense(expense: ExpenseCreate, user=Depends(get_current_user)):
     return await add_expense(user, expense)
@@ -35,6 +54,22 @@ async def create_expense(expense: ExpenseCreate, user=Depends(get_current_user))
 async def get_expenses(user=Depends(get_current_user)):
     """Get all user's expense records."""
     return await get_user_expenses(user)
+
+@router.put("/expense/{expense_id}")
+async def update_expense_record(expense_id: str, update: ExpenseUpdate, user=Depends(get_current_user)):
+    """Update an expense record."""
+    result = await update_expense(user, expense_id, update)
+    if not result:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return result
+
+@router.delete("/expense/{expense_id}")
+async def delete_expense_record(expense_id: str, user=Depends(get_current_user)):
+    """Delete an expense record."""
+    deleted = await delete_expense(user, expense_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return {"message": "Expense deleted successfully"}
 
 @router.post("/budget")
 async def create_budget(budget: BudgetCreate, user=Depends(get_current_user)):
@@ -76,6 +111,30 @@ async def get_analytics_data(
         return await build_analytics_data(user, months)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/transactions")
+async def list_transactions(
+    type: Optional[str] = Query(None, description="Filter by type: income or expense"),
+    search: Optional[str] = Query(None, description="Search in description, category, source"),
+    category: Optional[str] = Query(None, description="Filter by category or source"),
+    month: Optional[str] = Query(None, description="Filter by month (YYYY-MM)"),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+    user=Depends(get_current_user),
+):
+    """Get paginated, searchable transaction list."""
+    return await get_transactions(user, type, search, category, month, page, page_size)
+
+
+@router.get("/categories/statistics")
+async def category_statistics(
+    month: Optional[str] = Query(None, description="Filter by month (YYYY-MM)"),
+    user=Depends(get_current_user),
+):
+    """Get category statistics for expenses and income."""
+    return await get_category_statistics(user, month)
+
 
 @router.post("/ai-chat")
 async def ai_chat(query: dict, user=Depends(get_current_user)):
@@ -503,44 +562,53 @@ async def get_health_dashboard(
 @router.get("/privacy/data-summary")
 async def get_data_summary(user=Depends(get_current_user)):
     """Get summary of user's data for transparency."""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    from app.core.config import settings
-    
-    client = AsyncIOMotorClient(settings.MONGO_URI)
-    db = client.get_default_database()
-    
-    collections = ["expenses", "incomes", "budgets", "debts", "recommendations"]
-    summary = {}
-    
-    for collection_name in collections:
-        count = await db[collection_name].count_documents({"user_id": user["_id"]})
-        summary[collection_name] = count
-    
+    from app.services.finance_service import load_data, INCOMES_FILE, EXPENSES_FILE, BUDGETS_FILE, DEBTS_FILE
+
+    user_key = user.get("email", str(user["_id"]))
+    summary = {
+        "expenses": len(load_data(EXPENSES_FILE).get(user_key, [])),
+        "incomes": len(load_data(INCOMES_FILE).get(user_key, [])),
+        "budgets": len(load_data(BUDGETS_FILE).get(user_key, [])),
+        "debts": len(load_data(DEBTS_FILE).get(user_key, [])),
+    }
+    rec_file = "recommendations.json"
+    if os.path.exists(rec_file):
+        summary["recommendations"] = len(load_data(rec_file).get(user_key, []))
+
     return {
         "data_summary": summary,
         "total_records": sum(summary.values()),
         "privacy_policy": "Your data is used only to provide personalized financial recommendations and is never shared with third parties.",
-        "data_retention": "Data is retained for as long as you use the service. You can request deletion at any time."
+        "data_retention": "Data is retained for as long as you use the service. You can request deletion at any time.",
     }
 
 @router.delete("/privacy/delete-data")
 async def delete_user_data(user=Depends(get_current_user)):
-    """Delete all user data (GDPR compliance)."""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    from app.core.config import settings
-    
-    client = AsyncIOMotorClient(settings.MONGO_URI)
-    db = client.get_default_database()
-    
-    collections = ["expenses", "incomes", "budgets", "debts", "recommendations", "financial_goals"]
+    """Delete all user financial data (GDPR compliance)."""
+    from app.services.finance_service import (
+        load_data, save_data, INCOMES_FILE, EXPENSES_FILE, BUDGETS_FILE, DEBTS_FILE,
+    )
+
+    user_key = user.get("email", str(user["_id"]))
     deleted_counts = {}
-    
-    for collection_name in collections:
-        result = await db[collection_name].delete_many({"user_id": user["_id"]})
-        deleted_counts[collection_name] = result.deleted_count
-    
+
+    for filename in [INCOMES_FILE, EXPENSES_FILE, BUDGETS_FILE, DEBTS_FILE]:
+        data = load_data(filename)
+        count = len(data.get(user_key, []))
+        data[user_key] = []
+        save_data(filename, data)
+        deleted_counts[filename.replace(".json", "")] = count
+
+    rec_file = "recommendations.json"
+    if os.path.exists(rec_file):
+        rec_data = load_data(rec_file)
+        rec_count = len(rec_data.get(user_key, []))
+        rec_data[user_key] = []
+        save_data(rec_file, rec_data)
+        deleted_counts["recommendations"] = rec_count
+
     return {
-        "message": "All your data has been deleted successfully",
+        "message": "All your financial data has been deleted successfully",
         "deleted_records": deleted_counts,
-        "total_deleted": sum(deleted_counts.values())
+        "total_deleted": sum(deleted_counts.values()),
     }
