@@ -13,7 +13,6 @@ import {
   Alert,
   alpha,
   useTheme,
-  useMediaQuery,
 } from "@mui/material";
 import {
   Lightbulb,
@@ -49,7 +48,6 @@ interface RecommendationsData {
 
 function RecommendationsPage() {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [data, setData] = useState<RecommendationsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -137,10 +135,11 @@ function RecommendationsPage() {
       >
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography
-            variant={{ xs: "h4", sm: "h3" }}
+            variant="h3"
             component="h1"
             sx={{
               fontWeight: 700,
+              fontSize: { xs: '1.75rem', sm: '3rem' },
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
@@ -150,7 +149,7 @@ function RecommendationsPage() {
           >
             💡 AI Recommendations
           </Typography>
-          <Typography variant={{ xs: "body2", sm: "body1" }} color="text.secondary">
+          <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }} color="text.secondary">
             Intelligent suggestions to improve your financial health
           </Typography>
         </Box>
@@ -211,7 +210,7 @@ function RecommendationsPage() {
                     )} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
                   }}
                 >
-                  <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 700 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
                     {data.total_count}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -238,7 +237,7 @@ function RecommendationsPage() {
                     )} 0%, ${alpha(theme.palette.error.main, 0.05)} 100%)`,
                   }}
                 >
-                  <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 700, color: theme.palette.error.main }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.error.main, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
                     {data.recommendations.filter((r) => r.priority === "high").length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -265,7 +264,7 @@ function RecommendationsPage() {
                     )} 0%, ${alpha(theme.palette.success.main, 0.05)} 100%)`,
                   }}
                 >
-                  <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 700, color: theme.palette.success.main }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.success.main, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
                     {data.recommendations.reduce((sum, r) => sum + (r.potential_savings || 0), 0).toFixed(0)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -338,8 +337,8 @@ function RecommendationsPage() {
                               }}
                             >
                               <Typography
-                                variant={{ xs: "subtitle1", sm: "h6" }}
-                                sx={{ fontWeight: 600 }}
+                                variant="h6"
+                                sx={{ fontWeight: 600, fontSize: { xs: '1rem', sm: '1.25rem' } }}
                               >
                                 {rec.title}
                               </Typography>
@@ -441,10 +440,11 @@ function RecommendationsPage() {
                                     💰 Potential Savings
                                   </Typography>
                                   <Typography
-                                    variant={{ xs: "subtitle1", sm: "h6" }}
+                                    variant="h6"
                                     sx={{
                                       color: theme.palette.success.main,
                                       fontWeight: 700,
+                                      fontSize: { xs: '1rem', sm: '1.25rem' },
                                     }}
                                   >
                                     {formatCurrency(rec.potential_savings)}/month

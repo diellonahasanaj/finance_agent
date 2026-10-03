@@ -179,7 +179,7 @@ function Income() {
           >
             Back
           </Button>
-          <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 600 }}>
+          <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
             Income Management
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -268,7 +268,7 @@ function Income() {
               <Typography variant="body2" color="text.secondary">
                 Total Records
               </Typography>
-              <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 600 }}>
+              <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
                 {data.total}
               </Typography>
             </CardContent>
@@ -278,7 +278,7 @@ function Income() {
               <Typography variant="body2" color="text.secondary">
                 Total Income
               </Typography>
-              <Typography variant={{ xs: "h5", sm: "h4" }} color="success.main" sx={{ fontWeight: 600 }}>
+              <Typography variant="h4" color="success.main" sx={{ fontWeight: 600, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
                 {formatCurrency(data.items.reduce((sum, i) => sum + i.amount, 0))}
               </Typography>
             </CardContent>
