@@ -13,6 +13,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Fix for invisible input text - override any inherited transparent text fill */
+input {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  opacity: 1 !important;
+}
+
 a {
   font-weight: 500;
   color: #646cff;

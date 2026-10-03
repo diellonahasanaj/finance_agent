@@ -28,6 +28,7 @@ import {
   Tooltip,
   useTheme,
   alpha,
+  useMediaQuery,
 } from "@mui/material";
 import { Edit, Delete, Search, Add, Refresh, ArrowBack } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -56,6 +57,7 @@ const INCOME_SOURCES = ["Salary", "Freelance", "Investment", "Bonus", "Other"];
 function Income() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [data, setData] = useState<IncomeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -166,25 +168,25 @@ function Income() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: '100%', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
-        <Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate("/dashboard")}
-            sx={{ mb: 2 }}
+            sx={{ mb: { xs: 1, sm: 2 } }}
           >
-            Back to Dashboard
+            Back
           </Button>
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 600 }}>
             Income Management
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Manage your income sources and records
           </Typography>
         </Box>
-        <Box sx={{ display: "flex", gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           <Button
             startIcon={<Add />}
             variant="contained"
@@ -192,9 +194,23 @@ function Income() {
             sx={{
               backgroundColor: theme.palette.success.main,
               "&:hover": { backgroundColor: theme.palette.success.dark },
+              display: { xs: 'none', sm: 'flex' }
             }}
           >
             Add Income
+          </Button>
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => navigate("/add-transaction")}
+            sx={{
+              backgroundColor: theme.palette.success.main,
+              "&:hover": { backgroundColor: theme.palette.success.dark },
+              display: { xs: 'flex', sm: 'none' },
+              minWidth: 'auto'
+            }}
+          >
+            <Add />
           </Button>
           <IconButton onClick={fetchIncome} disabled={loading}>
             <Refresh />
@@ -225,7 +241,7 @@ function Income() {
               InputProps={{
                 startAdornment: <Search sx={{ mr: 1, color: "text.secondary" }} />,
               }}
-              sx={{ minWidth: 250 }}
+              sx={{ minWidth: { xs: 150, sm: 250 }, flex: { xs: 1, sm: 'auto' } }}
             />
             <TextField
               label="Month"
@@ -233,11 +249,11 @@ function Income() {
               value={month}
               onChange={(e) => setMonth(e.target.value)}
               InputLabelProps={{ shrink: true }}
-              sx={{ minWidth: 180 }}
+              sx={{ minWidth: { xs: 130, sm: 180 }, flex: { xs: 1, sm: 'auto' } }}
             />
             {(search || month) && (
-              <Button onClick={handleClearFilters} variant="outlined">
-                Clear Filters
+              <Button onClick={handleClearFilters} variant="outlined" size="small">
+                Clear
               </Button>
             )}
           </Box>
@@ -247,22 +263,22 @@ function Income() {
       {/* Summary Cards */}
       {data && (
         <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-          <Card sx={{ flex: 1, minWidth: 200, borderRadius: 2 }}>
+          <Card sx={{ flex: 1, minWidth: { xs: 140, sm: 200 }, borderRadius: 2 }}>
             <CardContent>
               <Typography variant="body2" color="text.secondary">
                 Total Records
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 600 }}>
+              <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 600 }}>
                 {data.total}
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: 1, minWidth: 200, borderRadius: 2 }}>
+          <Card sx={{ flex: 1, minWidth: { xs: 140, sm: 200 }, borderRadius: 2 }}>
             <CardContent>
               <Typography variant="body2" color="text.secondary">
                 Total Income
               </Typography>
-              <Typography variant="h4" color="success.main" sx={{ fontWeight: 600 }}>
+              <Typography variant={{ xs: "h5", sm: "h4" }} color="success.main" sx={{ fontWeight: 600 }}>
                 {formatCurrency(data.items.reduce((sum, i) => sum + i.amount, 0))}
               </Typography>
             </CardContent>
@@ -272,22 +288,22 @@ function Income() {
 
       {/* Table */}
       <Card sx={{ borderRadius: 3 }}>
-        <CardContent>
-          <TableContainer>
-            <Table>
+        <CardContent sx={{ p: 0 }}>
+          <TableContainer sx={{ overflowX: 'auto', maxWidth: '100%' }}>
+            <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Source</TableCell>
-                  <TableCell>Description</TableCell>
-                  <TableCell align="right">Amount</TableCell>
-                  <TableCell align="center">Actions</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>Date</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>Source</TableCell>
+                  <TableCell sx={{ minWidth: 150 }}>Description</TableCell>
+                  <TableCell align="right" sx={{ minWidth: 100 }}>Amount</TableCell>
+                  <TableCell align="center" sx={{ minWidth: 100 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {data?.items.map((income) => (
                   <TableRow key={income._id} hover>
-                    <TableCell>{income.date}</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{income.date}</TableCell>
                     <TableCell>
                       <Chip
                         label={income.source}
@@ -298,8 +314,8 @@ function Income() {
                         }}
                       />
                     </TableCell>
-                    <TableCell>{income.description || "-"}</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{income.description || "-"}</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 600, color: theme.palette.success.main, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                       {formatCurrency(income.amount)}
                     </TableCell>
                     <TableCell align="center">
@@ -326,14 +342,15 @@ function Income() {
               <Pagination
                 count={data.total_pages}
                 page={page}
-                onChange={(e, value) => setPage(value)}
+                onChange={(_, value) => setPage(value)}
                 color="primary"
+                size={isMobile ? "small" : "medium"}
               />
             </Box>
           )}
 
           {data?.items.length === 0 && (
-            <Box sx={{ textAlign: "center", py: 4 }}>
+            <Box sx={{ textAlign: "center", py: 4, px: 2 }}>
               <Typography variant="body2" color="text.secondary">
                 No income records found. Add your first income to get started.
               </Typography>

@@ -658,7 +658,7 @@ class RecommendationEngine:
         """Generate ethical disclosure for transparency."""
         return {
             'title': 'Ethical Disclosure',
-            'content': 'This recommendation system is designed to provide personalized financial advice based on your data. We are committed to transparency, user privacy, and ethical financial guidance. All recommendations are generated using rule-based logic and machine learning patterns, with your best interests as the primary consideration.',
+            'content': 'This recommendation system is designed to provide personalized financial advice based on your data. We are committed to transparency, user privacy, and ethical financial guidance. All recommendations are generated using rule-based logic and pattern-based analysis, with your best interests as the primary consideration.',
             'principles': self.ethical_guidelines,
             'limitations': [
                 'Recommendations are based on historical data and may not account for future changes',

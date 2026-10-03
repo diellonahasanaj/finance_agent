@@ -280,7 +280,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Delete All Financial Data</DialogTitle>
         <DialogContent>
           <Alert severity="error" sx={{ mb: 2 }}>This cannot be undone. Your account will remain but all transactions and budgets will be removed.</Alert>

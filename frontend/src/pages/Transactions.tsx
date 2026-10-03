@@ -28,6 +28,7 @@ import {
   Tooltip,
   useTheme,
   alpha,
+  useMediaQuery,
 } from "@mui/material";
 import { Edit, Delete, Search, Add, Refresh } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -62,6 +63,7 @@ const INCOME_SOURCES = ["Salary", "Freelance", "Investment", "Bonus", "Other"];
 function Transactions() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [data, setData] = useState<TransactionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -165,20 +167,33 @@ function Transactions() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: '100%', overflow: 'hidden' }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>Transactions</Typography>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 700 }}>Transactions</Typography>
           <Typography variant="body2" color="text.secondary">
             Manage your income and expense records
           </Typography>
         </Box>
-        <Box sx={{ display: "flex", gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           <Tooltip title="Refresh">
             <IconButton onClick={fetchTransactions}><Refresh /></IconButton>
           </Tooltip>
-          <Button variant="contained" startIcon={<Add />} onClick={() => navigate("/add-transaction")}>
+          <Button 
+            variant="contained" 
+            startIcon={<Add />} 
+            onClick={() => navigate("/add-transaction")}
+            sx={{ display: { xs: 'none', sm: 'flex' } }}
+          >
             Add Transaction
+          </Button>
+          <Button 
+            variant="contained" 
+            startIcon={<Add />} 
+            onClick={() => navigate("/add-transaction")}
+            sx={{ display: { xs: 'flex', sm: 'none' }, minWidth: 'auto' }}
+          >
+            <Add />
           </Button>
         </Box>
       </Box>
@@ -191,13 +206,13 @@ function Transactions() {
           <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
             <TextField
               size="small"
-              placeholder="Search transactions..."
+              placeholder="Search..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               InputProps={{ startAdornment: <Search sx={{ mr: 1, color: "text.secondary" }} /> }}
-              sx={{ minWidth: 220 }}
+              sx={{ minWidth: { xs: 150, sm: 220 }, flex: { xs: 1, sm: 'auto' } }}
             />
-            <FormControl size="small" sx={{ minWidth: 140 }}>
+            <FormControl size="small" sx={{ minWidth: { xs: 100, sm: 140 }, flex: { xs: 1, sm: 'auto' } }}>
               <InputLabel>Type</InputLabel>
               <Select value={typeFilter} label="Type" onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}>
                 <MenuItem value="">All</MenuItem>
@@ -212,10 +227,11 @@ function Transactions() {
               value={month}
               onChange={(e) => { setMonth(e.target.value); setPage(1); }}
               InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: { xs: 130, sm: 160 }, flex: { xs: 1, sm: 'auto' } }}
             />
             {(search || typeFilter || month) && (
               <Button size="small" onClick={() => { setSearch(""); setTypeFilter(""); setMonth(""); setPage(1); }}>
-                Clear filters
+                Clear
               </Button>
             )}
           </Box>
@@ -244,22 +260,22 @@ function Transactions() {
             </Box>
           ) : (
             <>
-              <TableContainer>
-                <Table>
+              <TableContainer sx={{ overflowX: 'auto', maxWidth: '100%' }}>
+                <Table size="small">
                   <TableHead>
                     <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
-                      <TableCell>Date</TableCell>
-                      <TableCell>Type</TableCell>
-                      <TableCell>Description</TableCell>
-                      <TableCell>Category / Source</TableCell>
-                      <TableCell align="right">Amount</TableCell>
-                      <TableCell align="right">Actions</TableCell>
+                      <TableCell sx={{ minWidth: 100 }}>Date</TableCell>
+                      <TableCell sx={{ minWidth: 80 }}>Type</TableCell>
+                      <TableCell sx={{ minWidth: 150 }}>Description</TableCell>
+                      <TableCell sx={{ minWidth: 120 }}>Category / Source</TableCell>
+                      <TableCell align="right" sx={{ minWidth: 100 }}>Amount</TableCell>
+                      <TableCell align="center" sx={{ minWidth: 100 }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {data.items.map((tx) => (
                       <TableRow key={tx._id} hover>
-                        <TableCell>{tx.date?.slice(0, 10)}</TableCell>
+                        <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{tx.date?.slice(0, 10)}</TableCell>
                         <TableCell>
                           <Chip
                             label={tx.type}
@@ -268,20 +284,26 @@ function Transactions() {
                             variant="outlined"
                           />
                         </TableCell>
-                        <TableCell>{tx.description || tx.label || "—"}</TableCell>
-                        <TableCell>{tx.category || tx.source || "—"}</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600, color: tx.type === "income" ? "success.main" : "error.main" }}>
+                        <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {tx.description || tx.label || "—"}
+                        </TableCell>
+                        <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }}>{tx.category || tx.source || "—"}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600, color: tx.type === "income" ? "success.main" : "error.main", fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                           {tx.type === "income" ? "+" : "-"}{formatCurrency(tx.amount)}
                         </TableCell>
-                        <TableCell align="right">
-                          <IconButton size="small" onClick={() => openEdit(tx)}><Edit fontSize="small" /></IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => { setSelected(tx); setDeleteOpen(true); }}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
+                        <TableCell align="center">
+                          <Tooltip title="Edit">
+                            <IconButton size="small" onClick={() => openEdit(tx)}><Edit fontSize="small" /></IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => { setSelected(tx); setDeleteOpen(true); }}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -290,7 +312,7 @@ function Transactions() {
               </TableContainer>
               {data.total_pages > 1 && (
                 <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                  <Pagination count={data.total_pages} page={page} onChange={(_, p) => setPage(p)} color="primary" />
+                  <Pagination count={data.total_pages} page={page} onChange={(_, p) => setPage(p)} color="primary" size={isMobile ? "small" : "medium"} />
                 </Box>
               )}
             </>
@@ -332,7 +354,7 @@ function Transactions() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
+      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Delete Transaction</DialogTitle>
         <DialogContent>
           <Typography>Are you sure you want to delete this {selected?.type}? This action cannot be undone.</Typography>

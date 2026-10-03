@@ -7,9 +7,11 @@ import {
   Toolbar,
   Typography,
   Box,
-  Switch,
-  FormControlLabel,
   Divider,
+  IconButton,
+  useMediaQuery,
+  useTheme,
+  AppBar,
 } from "@mui/material";
 import {
   Dashboard,
@@ -25,6 +27,7 @@ import {
   AccountBalanceWallet,
   CreditCard,
   CloudUpload,
+  Menu as MenuIcon,
 } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -47,26 +50,18 @@ const navItems = [
 ];
 
 interface SideBarProps {
-  darkMode: boolean;
-  onDarkModeChange: (value: boolean) => void;
+  mobileOpen?: boolean;
+  onDrawerToggle?: () => void;
 }
 
-function SideBar({ darkMode, onDarkModeChange }: SideBarProps) {
+function SideBar({ mobileOpen, onDrawerToggle }: SideBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: DRAWER_WIDTH,
-        flexShrink: 0,
-        "& .MuiDrawer-paper": {
-          width: DRAWER_WIDTH,
-          boxSizing: "border-box",
-        },
-      }}
-    >
+  const drawer = (
+    <>
       <Toolbar>
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 700, color: "white" }}>
@@ -83,7 +78,12 @@ function SideBar({ darkMode, onDarkModeChange }: SideBarProps) {
           <ListItemButton
             key={item.path}
             selected={location.pathname === item.path}
-            onClick={() => navigate(item.path)}
+            onClick={() => {
+              navigate(item.path);
+              if (isMobile && onDrawerToggle) {
+                onDrawerToggle();
+              }
+            }}
           >
             <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>
               {item.icon}
@@ -92,23 +92,61 @@ function SideBar({ darkMode, onDarkModeChange }: SideBarProps) {
           </ListItemButton>
         ))}
       </List>
-      <Box sx={{ p: 2 }}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={darkMode}
-              onChange={(e) => onDarkModeChange(e.target.checked)}
-              color="default"
-            />
-          }
-          label={
-            <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.8)" }}>
-              Dark mode
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile AppBar with hamburger menu */}
+      {isMobile && (
+        <AppBar
+          position="fixed"
+          sx={{
+            width: '100%',
+            ml: 0,
+            zIndex: theme.zIndex.drawer + 1,
+          }}
+        >
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={onDrawerToggle}
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+              Finance Advisor
             </Typography>
-          }
-        />
-      </Box>
-    </Drawer>
+          </Toolbar>
+        </AppBar>
+      )}
+
+      {/* Sidebar - permanent on desktop, temporary on mobile */}
+      <Drawer
+        variant={isMobile ? "temporary" : "permanent"}
+        open={isMobile ? mobileOpen : true}
+        onClose={onDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile
+        }}
+        sx={{
+          width: DRAWER_WIDTH,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            width: DRAWER_WIDTH,
+            boxSizing: "border-box",
+            ...(isMobile && {
+              top: 0,
+              height: '100%',
+            }),
+          },
+        }}
+      >
+        {drawer}
+      </Drawer>
+    </>
   );
 }
 

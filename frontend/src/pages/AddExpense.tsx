@@ -59,7 +59,11 @@ function AddExpense() {
           setCategories(res.data.categories);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Failed to fetch categories:", err);
+        // Fallback to default categories if endpoint fails
+        setCategories(["Food", "Transport", "Shopping", "Entertainment", "Bills", "Health", "Education", "Other"]);
+      });
   }, []);
 
   const classifyExpense = useCallback(async (description: string) => {
@@ -132,7 +136,7 @@ function AddExpense() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 600, mx: "auto" }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: { xs: '100%', sm: 600 }, mx: "auto" }}>
       <Button startIcon={<ArrowBack />} onClick={() => navigate("/dashboard")} sx={{ mb: 2 }}>
         Back to Dashboard
       </Button>

@@ -5,12 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.utils.auth import get_current_user
 from app.services.recommendation_engine_v2 import financial_recommendation_engine
 from app.services.expense_classifier import expense_classifier
-from app.models.finance import RecommendationModel
 from typing import List, Dict
 import json
 import os
 from datetime import datetime
-from bson import ObjectId
 
 router = APIRouter()
 
@@ -40,7 +38,7 @@ def get_user_data_key(user):
     return user.get("email", str(user.get("_id", "")))
 
 
-@router.get("/recommendations", response_model=Dict)
+@router.get("", response_model=Dict)
 async def get_recommendations(user=Depends(get_current_user)):
     """
     Get AI-generated recommendations for the user.
@@ -226,7 +224,7 @@ async def get_how_it_works(user=Depends(get_current_user)):
                     'description': (
                         'The system tracks your expenses by category (Food, Transportation, '
                         'Housing, Entertainment, etc.). Each expense is automatically classified '
-                        'using keyword matching and machine learning.'
+                        'using keyword matching and rule-based logic.'
                     )
                 },
                 {

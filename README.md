@@ -1,6 +1,6 @@
 # Personal Finance Advisor Agent
 
-An intelligent personal finance management system that helps users track expenses, manage budgets, and receive personalized financial recommendations using rule-based and machine learning approaches.
+An intelligent personal finance management system that helps users track expenses, manage budgets, and receive personalized financial recommendations using rule-based decision logic and statistical data analysis.
 
 ## 🚀 Features
 
@@ -24,16 +24,16 @@ An intelligent personal finance management system that helps users track expense
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend API   │    │   Database      │
-│   React/Vite    │◄──►│   FastAPI       │◄──►│   MongoDB       │
-│   Material-UI    │    │   Python        │    │   Motor Driver  │
+│   Frontend      │    │   Backend API   │    │   Data Storage  │
+│   React/Vite    │◄──►│   FastAPI       │◄──►│   JSON Files    │
+│   Material-UI    │    │   Python        │    │   File-based    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
                        ┌─────────────────┐
-                       │   ML Engine     │
                        │   Decision      │
-                       │   Logic         │
+                       │   Engine        │
+                       │   (Rule-Based)  │
                        └─────────────────┘
 ```
 
@@ -42,7 +42,7 @@ An intelligent personal finance management system that helps users track expense
 ### Backend
 - **FastAPI**: Modern, fast web framework for APIs
 - **Python**: Core programming language
-- **MongoDB**: NoSQL database with Motor driver
+- **JSON Storage**: File-based data storage (users, incomes, expenses, budgets, debts)
 - **JWT**: Secure authentication
 - **NumPy/Pandas**: Data analysis and processing
 
@@ -53,16 +53,15 @@ An intelligent personal finance management system that helps users track expense
 - **Axios**: HTTP client for API calls
 - **React Router**: Client-side routing
 
-### ML & Analytics
-- **Custom Algorithms**: Rule-based and ML approaches
-- **Statistical Analysis**: Trend detection and anomaly identification
+### Analytics & Decision Logic
+- **Rule-Based Engine**: Financial decision logic and recommendations
+- **Statistical Analysis**: Trend detection and anomaly identification using pandas/numpy
 - **Behavioral Finance**: Psychological spending patterns
 
 ## 📦 Installation
 
 ### Prerequisites
 - Python 3.8+
-- MongoDB 4.4+
 - Node.js 16+
 - npm or yarn
 
@@ -94,24 +93,14 @@ pip install -r requirements.txt
 
 4. **Set up environment variables**
 ```bash
-# Create .env file
-cp .env.example .env
+# Create .env file from example
+cp backend_python/.env.example backend_python/.env
 
-# Edit .env with your configuration
-MONGO_URI="mongodb://localhost:27017/personal_finance_advisor"
+# Edit backend_python/.env with your configuration
 JWT_SECRET="your_jwt_secret_here"
 ```
 
-5. **Start MongoDB**
-```bash
-# On Windows
-mongod
-
-# On Linux/Mac with systemd
-sudo systemctl start mongod
-```
-
-6. **Run the backend**
+5. **Run the backend**
 ```bash
 python run.py
 ```
@@ -201,11 +190,10 @@ The frontend will be available at `http://localhost:5173`
 ```bash
 # Backend tests
 cd backend_python
-python -m pytest tests/
+python -m pytest tests/ -v
 
-# Frontend tests
-cd frontend
-npm run test
+# View test report
+curl http://localhost:8000/testing/test-report
 ```
 
 ### Generate Test Report
@@ -221,7 +209,7 @@ curl http://localhost:8000/testing/performance-tests
 ## 📈 Features in Detail
 
 ### Data Import & Classification
-- **Automatic Expense Categorization**: ML-powered classification into 10+ categories
+- **Automatic Expense Categorization**: Rule-based classification into 10+ categories using keyword matching
 - **Smart Data Processing**: Validation, cleaning, and normalization
 - **Multiple Format Support**: CSV, JSON, and manual entry
 - **Error Handling**: Comprehensive validation and user feedback
@@ -233,14 +221,14 @@ curl http://localhost:8000/testing/performance-tests
 - **Budget Performance**: Track adherence and overspending
 
 ### Recommendation Engine
-- **Rule-Based Logic**: Traditional financial principles
-- **ML Insights**: Pattern recognition and predictive analysis
+- **Rule-Based Logic**: Traditional financial principles and thresholds
+- **Statistical Analysis**: Pattern recognition using data analysis
 - **Behavioral Finance**: Psychological spending factors
 - **Personalized Action Plans**: Step-by-step implementation guidance
 
 ### Privacy & Security
 - **GDPR Compliance**: Full data protection rights
-- **Transparent Algorithms**: Explainable AI recommendations
+- **Transparent Algorithms**: Explainable rule-based recommendations
 - **Data Control**: User control over all data
 - **Secure Authentication**: JWT-based security
 
@@ -250,10 +238,10 @@ curl http://localhost:8000/testing/performance-tests
 ```python
 # app/core/config.py
 class Settings:
-    MONGO_URI: str = "mongodb://localhost:27017/personal_finance_advisor"
+    MONGO_URI: str = "mongodb://localhost:27017/personal_finance_advisor"  # Not currently used
     JWT_SECRET: str = "your_jwt_secret_here"
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 ```
 
 ### Frontend Configuration
@@ -291,9 +279,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Common Issues
 
 **Backend won't start**
-- Check MongoDB is running
-- Verify environment variables
-- Check Python dependencies
+- Verify environment variables are set in .env
+- Check Python dependencies are installed
+- Ensure backend_python directory exists with required JSON files
 
 **Frontend shows blank page**
 - Verify backend is running
@@ -331,7 +319,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 📋 Planned Features
 - [ ] Bank API integration (Plaid)
 - [ ] Investment advisory
-- [ ] Advanced ML models
+- [ ] Advanced data analysis models
 - [ ] Real-time notifications
 - [ ] Multi-currency support
 
@@ -359,7 +347,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Medium Term (6 months)
 - Bank integration
 - Investment features
-- Advanced ML models
+- Advanced data analysis models
 
 ### Long Term (12 months)
 - Multi-currency support

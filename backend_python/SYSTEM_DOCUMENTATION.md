@@ -25,7 +25,7 @@ The Personal Finance Advisor Agent is an intelligent financial management system
 - **Data Import**: CSV/JSON import with automatic classification
 - **Expense Analysis**: Categorization, trend analysis, anomaly detection
 - **Budget Management**: Overspending alerts and intelligent budgeting
-- **Recommendations**: Rule-based and ML-driven financial advice
+- **Recommendations**: Rule-based and data-driven financial advice
 - **Privacy-First**: GDPR-compliant data handling
 - **Comprehensive Testing**: Automated testing and evaluation framework
 
@@ -40,9 +40,9 @@ The Personal Finance Advisor Agent is an intelligent financial management system
                               │
                               ▼
                        ┌─────────────────┐
-                       │   ML Engine     │
-                       │   (Decision     │
-                       │    Logic)       │
+                       │   Decision      │
+                       │   Engine        │
+                       │   (Rule-Based)  │
                        └─────────────────┘
 ```
 
@@ -51,7 +51,7 @@ The Personal Finance Advisor Agent is an intelligent financial management system
 - **Backend**: FastAPI, Python, Motor (MongoDB)
 - **Database**: MongoDB with Motor driver
 - **Authentication**: JWT tokens with bcrypt
-- **ML/Analytics**: NumPy, Pandas, Custom algorithms
+- **Analytics/Decision Logic**: NumPy, Pandas, Rule-based algorithms
 
 ## Core Components
 
@@ -86,16 +86,16 @@ The Personal Finance Advisor Agent is an intelligent financial management system
 - Overspending detection and alerts
 
 ### 3. Decision Engine (`app/services/decision_engine.py`)
-**Purpose**: Rule-based and ML-driven recommendation generation
+**Purpose**: Rule-based and data-driven recommendation generation
 
 **Key Functions**:
 - `generate_recommendations()`: Create personalized financial advice
 - `_generate_rule_based_recommendations()`: Traditional financial rules
-- `_generate_ml_recommendations()`: Machine learning insights
+- `_generate_data_driven_recommendations()`: Statistical analysis insights
 - `_generate_behavioral_recommendations()`: Behavioral finance principles
 
 **Features**:
-- Hybrid rule-based and ML approach
+- Hybrid rule-based and statistical analysis approach
 - Priority-based recommendation ranking
 - Confidence scoring for recommendations
 - Behavioral finance integration
@@ -417,9 +417,9 @@ class Settings:
 ## Future Enhancements
 
 ### Planned Features
-1. **Advanced ML Integration**
-   - Deep learning for expense classification
-   - Predictive spending analysis
+1. **Advanced Data Analysis Integration**
+   - Enhanced statistical analysis for expense classification
+   - Predictive spending analysis using time-series methods
    - Personalized recommendation tuning
 
 2. **Bank Integration**
@@ -474,7 +474,7 @@ class Settings:
 The Personal Finance Advisor Agent represents a comprehensive solution for intelligent financial management. The system combines:
 
 - **Robust Architecture**: Scalable, maintainable, and secure
-- **Advanced Analytics**: ML-driven insights and recommendations
+- **Advanced Analytics**: Data-driven insights and recommendations
 - **User-Centric Design**: Privacy-first with transparent explanations
 - **Comprehensive Testing**: Thorough validation and quality assurance
 - **Future-Ready**: Extensible architecture for continued development
@@ -482,7 +482,7 @@ The Personal Finance Advisor Agent represents a comprehensive solution for intel
 The system successfully addresses all project requirements:
 - ✅ Data import and processing capabilities
 - ✅ Expense and budget analysis with classification
-- ✅ Rule-based and ML decision logic
+- ✅ Rule-based and data-driven decision logic
 - ✅ Actionable recommendations with explanations
 - ✅ User-friendly interface design
 - ✅ Privacy and ethical considerations

@@ -1,6 +1,6 @@
 """
-Decision engine with rule-based and machine learning logic for financial recommendations.
-Combines traditional rule-based systems with simple ML patterns for intelligent advice.
+Decision engine with rule-based and pattern-based logic for financial recommendations.
+Combines traditional rule-based systems with statistical analysis for intelligent advice.
 """
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime, timedelta
@@ -42,7 +42,7 @@ class DecisionEngine:
             }
         }
         
-        # ML pattern weights (simplified for demonstration)
+        # Pattern analysis weights (simplified for demonstration)
         self.pattern_weights = {
             'seasonal_spending': 0.3,
             'recurring_patterns': 0.4,
@@ -51,20 +51,20 @@ class DecisionEngine:
 
     async def generate_recommendations(self, user_id: str, context: Optional[Dict] = None) -> List[Dict]:
         """
-        Generate comprehensive financial recommendations using rule-based and ML logic.
+        Generate comprehensive financial recommendations using rule-based and pattern-based logic.
         """
         recommendations = []
-        
+
         # Get user's financial data
         financial_data = await self._get_user_financial_data(user_id)
-        
+
         # Rule-based recommendations
         rule_recommendations = await self._generate_rule_based_recommendations(financial_data)
         recommendations.extend(rule_recommendations)
-        
-        # ML-based recommendations
-        ml_recommendations = await self._generate_ml_recommendations(financial_data)
-        recommendations.extend(ml_recommendations)
+
+        # Pattern-based recommendations
+        pattern_recommendations = await self._generate_pattern_recommendations(financial_data)
+        recommendations.extend(pattern_recommendations)
         
         # Behavioral insights
         behavioral_recommendations = await self._generate_behavioral_recommendations(financial_data)
@@ -230,8 +230,8 @@ class DecisionEngine:
         
         return recommendations
 
-    async def _generate_ml_recommendations(self, data: Dict) -> List[Dict]:
-        """Generate recommendations using machine learning patterns."""
+    async def _generate_pattern_recommendations(self, data: Dict) -> List[Dict]:
+        """Generate recommendations using pattern-based analysis."""
         recommendations = []
         
         # Seasonal spending patterns
@@ -262,7 +262,7 @@ class DecisionEngine:
                 'description': f'Found {len(recurring_patterns["unusual_recurring"])} recurring expenses that may need review.',
                 'potential_savings': recurring_patterns['potential_savings'],
                 'confidence_score': 0.7,
-                'explanation': 'Machine learning identified recurring expenses that might be optimized or eliminated.',
+                'explanation': 'Pattern-based analysis identified recurring expenses that might be optimized or eliminated.',
                 'action_steps': [
                     'Review subscription services and memberships',
                     'Cancel unused or underutilized recurring services',
@@ -417,7 +417,7 @@ class DecisionEngine:
         }
 
     async def _detect_spending_anomalies(self, expenses: List[Dict]) -> Dict:
-        """Detect spending anomalies using ML."""
+        """Detect spending anomalies using statistical analysis."""
         # Simplified anomaly detection
         return {
             'high_frequency_anomalies': False,

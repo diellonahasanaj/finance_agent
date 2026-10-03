@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, File, HTTPException
-from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate, IncomeUpdate, ExpenseUpdate
+from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate, DebtUpdate, IncomeUpdate, ExpenseUpdate
 from app.services.finance_service import (
     add_income, add_expense, set_budget, add_debt,
     get_user_incomes, get_user_expenses, get_user_budgets, get_user_debts,
     build_dashboard_data, build_analytics_data,
     update_expense, delete_expense, update_income, delete_income,
+    update_debt, delete_debt,
     get_transactions, get_category_statistics,
+    load_data, INCOMES_FILE, EXPENSES_FILE, BUDGETS_FILE,
 )
 from app.services.data_handling import data_handler
 from app.services.expense_analysis import expense_analyzer
 from app.services.decision_engine import decision_engine
-from app.services.recommendation_engine import recommendation_engine
 from app.services.financial_planning_service import debt_repayment_planner, savings_goal_planner, financial_health_analyzer
 from app.services.alerts_service import alerts_manager
 from app.utils.auth import get_current_user
@@ -88,6 +89,18 @@ async def create_debt(debt: DebtCreate, user=Depends(get_current_user)):
 async def get_debts(user=Depends(get_current_user)):
     """Get all user's debt records."""
     return await get_user_debts(user)
+
+@router.put("/debt/{debt_id}")
+async def update_debt_record(debt_id: str, update: DebtUpdate, user=Depends(get_current_user)):
+    """Update a debt record."""
+    result = await update_debt(user, debt_id, update)
+    return result
+
+@router.delete("/debt/{debt_id}")
+async def delete_debt_record(debt_id: str, user=Depends(get_current_user)):
+    """Delete a debt record."""
+    deleted = await delete_debt(user, debt_id)
+    return deleted
 
 @router.get("/dashboard")
 async def get_dashboard_data(
@@ -508,18 +521,68 @@ async def get_budget_recommendations(user=Depends(get_current_user)):
     recommendations = await expense_analyzer.generate_budget_recommendations(user["_id"])
     return {"recommendations": recommendations}
 
-# Recommendations endpoints
 @router.get("/recommendations")
 async def get_recommendations(user=Depends(get_current_user)):
     """Get personalized financial recommendations."""
-    recommendations = await decision_engine.generate_recommendations(user["_id"])
-    return {"recommendations": recommendations}
-
-@router.get("/recommendations/comprehensive")
-async def get_comprehensive_recommendations(user=Depends(get_current_user)):
-    """Get comprehensive recommendations with detailed explanations."""
-    comprehensive = await recommendation_engine.generate_comprehensive_recommendations(user["_id"])
-    return comprehensive
+    try:
+        from app.services.recommendation_engine_v2 import financial_recommendation_engine
+    except ImportError as e:
+        import traceback
+        raise HTTPException(status_code=503, detail=f"Recommendation engine import failed: {str(e)}\nTraceback: {traceback.format_exc()}")
+    
+    try:
+        user_key = user.get("email", str(user.get("_id", "")))
+        
+        # Load data from JSON files
+        incomes_data = load_data(INCOMES_FILE)
+        expenses_data = load_data(EXPENSES_FILE)
+        budgets_data = load_data(BUDGETS_FILE)
+        
+        user_incomes = incomes_data.get(user_key, [])
+        user_expenses = expenses_data.get(user_key, [])
+        user_budgets = budgets_data.get(user_key, [])
+        
+        total_income = sum(i.get('amount', 0) for i in user_incomes)
+        total_expenses = sum(e.get('amount', 0) for e in user_expenses)
+        
+        category_breakdown = {}
+        for expense in user_expenses:
+            category = expense.get('category', 'Other')
+            category_breakdown[category] = category_breakdown.get(category, 0) + expense.get('amount', 0)
+        
+        # Create budget dict
+        budget_dict = {}
+        for budget in user_budgets:
+            category = budget.get('category', '')
+            limit = budget.get('limit', 0)
+            if category:
+                budget_dict[category] = limit
+        
+        # Generate recommendations using JSON-based engine
+        financial_data = {
+            'totalIncome': total_income,
+            'totalExpenses': total_expenses,
+            'categoryBreakdown': category_breakdown
+        }
+        
+        recommendations = await financial_recommendation_engine.generate_recommendations(
+            user_id=user_key,
+            financial_data=financial_data,
+            budget_data=budget_dict
+        )
+        
+        # Convert enum objects to strings for JSON serialization
+        for rec in recommendations:
+            if 'type' in rec and hasattr(rec['type'], 'value'):
+                rec['type'] = rec['type'].value
+            if 'priority' in rec and hasattr(rec['priority'], 'value'):
+                rec['priority'] = rec['priority'].value
+        
+        return {"recommendations": recommendations}
+    except Exception as e:
+        import traceback
+        error_detail = f"Error: {str(e)}\nTraceback: {traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=error_detail[:1000])
 
 # Financial health endpoints
 @router.get("/health/score")

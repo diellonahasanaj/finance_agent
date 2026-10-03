@@ -13,6 +13,7 @@ import {
   Alert,
   alpha,
   useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Lightbulb,
@@ -48,6 +49,7 @@ interface RecommendationsData {
 
 function RecommendationsPage() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [data, setData] = useState<RecommendationsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -121,7 +123,7 @@ function RecommendationsPage() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: '100%', overflow: 'hidden' }}>
       {/* Header */}
       <Box
         sx={{
@@ -133,9 +135,9 @@ function RecommendationsPage() {
           gap: 2,
         }}
       >
-        <Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography
-            variant="h3"
+            variant={{ xs: "h4", sm: "h3" }}
             component="h1"
             sx={{
               fontWeight: 700,
@@ -148,7 +150,7 @@ function RecommendationsPage() {
           >
             💡 AI Recommendations
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant={{ xs: "body2", sm: "body1" }} color="text.secondary">
             Intelligent suggestions to improve your financial health
           </Typography>
         </Box>
@@ -193,7 +195,7 @@ function RecommendationsPage() {
         <>
           {/* Summary */}
           <Grid container spacing={2} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={4}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -209,7 +211,7 @@ function RecommendationsPage() {
                     )} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
                   }}
                 >
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                  <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 700 }}>
                     {data.total_count}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -219,7 +221,7 @@ function RecommendationsPage() {
               </motion.div>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={4}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -236,7 +238,7 @@ function RecommendationsPage() {
                     )} 0%, ${alpha(theme.palette.error.main, 0.05)} 100%)`,
                   }}
                 >
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.error.main }}>
+                  <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 700, color: theme.palette.error.main }}>
                     {data.recommendations.filter((r) => r.priority === "high").length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -246,7 +248,7 @@ function RecommendationsPage() {
               </motion.div>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={4}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -263,7 +265,7 @@ function RecommendationsPage() {
                     )} 0%, ${alpha(theme.palette.success.main, 0.05)} 100%)`,
                   }}
                 >
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.success.main }}>
+                  <Typography variant={{ xs: "h5", sm: "h4" }} sx={{ fontWeight: 700, color: theme.palette.success.main }}>
                     {data.recommendations.reduce((sum, r) => sum + (r.potential_savings || 0), 0).toFixed(0)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -304,37 +306,39 @@ function RecommendationsPage() {
                         setExpandedId(isExpanded ? null : rec.id)
                       }
                     >
-                      <CardContent sx={{ p: 3 }}>
+                      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                         <Box
                           sx={{
                             display: "flex",
                             alignItems: "flex-start",
                             gap: 2,
                             mb: 2,
+                            flexWrap: { xs: 'wrap', sm: 'nowrap' },
                           }}
                         >
                           <Avatar
                             sx={{
                               backgroundColor: colors.bg,
                               color: "white",
-                              width: 48,
-                              height: 48,
+                              width: { xs: 40, sm: 48 },
+                              height: { xs: 40, sm: 48 },
                             }}
                           >
                             {getRecommendationIcon(rec.type)}
                           </Avatar>
 
-                          <Box sx={{ flex: 1 }}>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Box
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 1,
                                 mb: 0.5,
+                                flexWrap: "wrap",
                               }}
                             >
                               <Typography
-                                variant="h6"
+                                variant={{ xs: "subtitle1", sm: "h6" }}
                                 sx={{ fontWeight: 600 }}
                               >
                                 {rec.title}
@@ -349,13 +353,13 @@ function RecommendationsPage() {
                             <Typography
                               variant="body2"
                               color="text.secondary"
-                              sx={{ mb: 1 }}
+                              sx={{ mb: 1, wordBreak: 'break-word' }}
                             >
                               {rec.recommendation}
                             </Typography>
                           </Box>
 
-                          <Box sx={{ display: "flex", gap: 1 }}>
+                          <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
                             <IconButton
                               size="small"
                               onClick={(e) => {
@@ -420,6 +424,7 @@ function RecommendationsPage() {
                                     ),
                                     borderLeft: `3px solid ${colors.bg}`,
                                     borderRadius: 1,
+                                    wordBreak: 'break-word',
                                   }}
                                 >
                                   {rec.explanation}
@@ -436,7 +441,7 @@ function RecommendationsPage() {
                                     💰 Potential Savings
                                   </Typography>
                                   <Typography
-                                    variant="h6"
+                                    variant={{ xs: "subtitle1", sm: "h6" }}
                                     sx={{
                                       color: theme.palette.success.main,
                                       fontWeight: 700,
@@ -471,6 +476,7 @@ function RecommendationsPage() {
                                           fontWeight: 600,
                                           color: colors.bg,
                                           minWidth: 20,
+                                          flexShrink: 0,
                                         }}
                                       >
                                         {idx + 1}.
@@ -478,6 +484,7 @@ function RecommendationsPage() {
                                       <Typography
                                         variant="body2"
                                         color="text.secondary"
+                                        sx={{ wordBreak: 'break-word' }}
                                       >
                                         {step}
                                       </Typography>

@@ -1,7 +1,7 @@
 // src/App.tsx
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { Box, CssBaseline, Toolbar, ThemeProvider, createTheme } from "@mui/material";
-import { useState, useEffect, useMemo } from "react";
+import { Box, CssBaseline, Toolbar, ThemeProvider, createTheme, useMediaQuery, useTheme as useMuiTheme } from "@mui/material";
+import { useState, useEffect } from "react";
 
 import Dashboard from "./pages/Dashboard";
 import AddExpense from "./pages/AddExpense";
@@ -23,7 +23,6 @@ import Debt from "./pages/Debt";
 import DataManagement from "./pages/DataManagement";
 
 import SideBar from "./components/layout/SideBar";
-import lightTheme from "./theme/theme";
 
 // Define type for a user
 interface User {
@@ -32,38 +31,26 @@ interface User {
   email: string;
 }
 
+// Dark mode theme (permanent)
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+    primary: { main: "#1976d2" },
+    secondary: { main: "#dc004e" },
+    background: { default: "#121212", paper: "#1e1e1e" },
+    success: { main: "#4caf50" },
+    error: { main: "#f44336" },
+    warning: { main: "#ff9800" },
+    info: { main: "#2196f3" },
+  },
+});
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : false;
-  });
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-
-  // Create theme based on mode
-  const theme = useMemo(
-    () =>
-      darkMode
-        ? createTheme({
-            palette: {
-              mode: "dark",
-              primary: { main: "#1976d2" },
-              secondary: { main: "#dc004e" },
-              background: { default: "#121212", paper: "#1e1e1e" },
-              success: { main: "#4caf50" },
-              error: { main: "#f44336" },
-              warning: { main: "#ff9800" },
-              info: { main: "#2196f3" },
-            },
-          })
-        : lightTheme,
-    [darkMode]
-  );
-
-  // Save theme preference
-  useEffect(() => {
-    localStorage.setItem("darkMode", JSON.stringify(darkMode));
-  }, [darkMode]);
+  const theme = useMuiTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Check if user is logged in (token in localStorage)
   useEffect(() => {
@@ -93,15 +80,27 @@ function App() {
     }
   }, [location]);
 
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Box sx={{ display: "flex" }}>
         {/* Sidebar only visible if user is logged in */}
-        {user && <SideBar darkMode={darkMode} onDarkModeChange={setDarkMode} />}
+        {user && (
+          <SideBar
+            mobileOpen={mobileOpen}
+            onDrawerToggle={handleDrawerToggle}
+          />
+        )}
 
-        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Toolbar />
+        <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 }, ml: { md: user ? '260px' : 0 } }}>
+          {/* Add Toolbar for mobile to account for AppBar */}
+          {user && isMobile && <Toolbar />}
+          {/* Add Toolbar for desktop to account for sidebar */}
+          {user && !isMobile && <Toolbar />}
           <Routes>
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
             <Route path="/login" element={<Login onLogin={(user) => setUser(user)} />} />

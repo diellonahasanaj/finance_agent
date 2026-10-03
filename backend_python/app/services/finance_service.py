@@ -6,8 +6,9 @@ import json
 import os
 from collections import defaultdict
 from datetime import datetime
+from fastapi import HTTPException
 from typing import Dict, List, Optional
-from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate, IncomeUpdate, ExpenseUpdate
+from app.schemas.finance import IncomeCreate, ExpenseCreate, BudgetCreate, DebtCreate, DebtUpdate, IncomeUpdate, ExpenseUpdate
 from app.services.expense_classifier import expense_classifier
 from bson import ObjectId
 
@@ -122,6 +123,10 @@ async def add_debt(user, debt: DebtCreate):
     debt_dict["user_id"] = str(user["_id"])
     debt_dict["created_at"] = datetime.utcnow()
     
+    # If due_date is provided but date is not, use due_date as date
+    if "due_date" in debt_dict and debt_dict["due_date"] and ("date" not in debt_dict or not debt_dict["date"]):
+        debt_dict["date"] = debt_dict["due_date"]
+    
     user_key = user.get("email", str(user["_id"]))
     if user_key not in debts:
         debts[user_key] = []
@@ -130,6 +135,59 @@ async def add_debt(user, debt: DebtCreate):
     save_data(DEBTS_FILE, debts)
     
     return debt_dict
+
+async def update_debt(user, debt_id: str, update: DebtUpdate):
+    """
+    Update an existing debt record.
+    """
+    debts = load_data(DEBTS_FILE)
+    user_key = user.get("email", str(user["_id"]))
+    
+    if user_key not in debts:
+        raise HTTPException(status_code=404, detail="Debt not found")
+    
+    debt_index = -1
+    for i, debt in enumerate(debts[user_key]):
+        if debt.get("_id") == debt_id:
+            debt_index = i
+            break
+    
+    if debt_index == -1:
+        raise HTTPException(status_code=404, detail="Debt not found")
+    
+    # Update only provided fields
+    update_dict = update.dict(exclude_unset=True)
+    for key, value in update_dict.items():
+        debts[user_key][debt_index][key] = value
+    
+    debts[user_key][debt_index]["updated_at"] = datetime.utcnow()
+    save_data(DEBTS_FILE, debts)
+    
+    return debts[user_key][debt_index]
+
+async def delete_debt(user, debt_id: str):
+    """
+    Delete a debt record.
+    """
+    debts = load_data(DEBTS_FILE)
+    user_key = user.get("email", str(user["_id"]))
+    
+    if user_key not in debts:
+        raise HTTPException(status_code=404, detail="Debt not found")
+    
+    debt_index = -1
+    for i, debt in enumerate(debts[user_key]):
+        if debt.get("_id") == debt_id:
+            debt_index = i
+            break
+    
+    if debt_index == -1:
+        raise HTTPException(status_code=404, detail="Debt not found")
+    
+    debts[user_key].pop(debt_index)
+    save_data(DEBTS_FILE, debts)
+    
+    return {"message": "Debt deleted successfully"}
 
 async def get_user_incomes(user):
     """Get all incomes for a user."""

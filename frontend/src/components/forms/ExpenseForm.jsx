@@ -20,7 +20,7 @@ function ExpenseForm({ onSuccess }) {
 		e.preventDefault();
 		setError("");
 		try {
-			await API.post("/expense", form);
+			await API.post("/finance/expense", form);
 			setForm({ amount: "", category: "", description: "", date: "" });
 			if (onSuccess) onSuccess();
 		} catch (err) {

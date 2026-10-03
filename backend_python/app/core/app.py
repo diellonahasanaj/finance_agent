@@ -4,7 +4,7 @@ from app.middleware.error_handler import add_error_handlers
 from app.api import api_router
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Personal Finance Advisor Agent")
+    app = FastAPI(title="Personal Finance Advisor Agent", debug=True)
     
     # Add CORS middleware
     app.add_middleware(

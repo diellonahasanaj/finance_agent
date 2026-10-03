@@ -19,7 +19,7 @@ function BudgetForm({ onSuccess }) {
     e.preventDefault();
     setError("");
     try {
-      await API.post("/budget", { ...form, limit: parseFloat(form.limit) });
+      await API.post("/finance/budget", { ...form, limit: parseFloat(form.limit) });
       setForm({ category: "", limit: "", month: "" });
       if (onSuccess) onSuccess();
     } catch (err) {

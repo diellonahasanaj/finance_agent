@@ -31,4 +31,19 @@ class BudgetCreate(BaseModel):
 class DebtCreate(BaseModel):
     amount: float = Field(gt=0)
     creditor: Optional[str] = None
-    date: str
+    date: Optional[str] = None
+    interest_rate: Optional[float] = Field(default=None, ge=0)
+    monthly_payment: Optional[float] = Field(default=None, ge=0)
+    due_date: Optional[str] = None
+    description: Optional[str] = None
+    is_paid_off: Optional[bool] = False
+
+class DebtUpdate(BaseModel):
+    amount: Optional[float] = Field(default=None, gt=0)
+    creditor: Optional[str] = None
+    date: Optional[str] = None
+    interest_rate: Optional[float] = Field(default=None, ge=0)
+    monthly_payment: Optional[float] = Field(default=None, ge=0)
+    due_date: Optional[str] = None
+    description: Optional[str] = None
+    is_paid_off: Optional[bool] = None

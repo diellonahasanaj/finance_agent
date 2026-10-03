@@ -1,22 +1,22 @@
 
 
 import API from "../services/api";
-import { 
-  TextField, 
-  Button, 
-  Typography, 
-  Alert, 
-  Link, 
-  InputAdornment, 
-  IconButton, 
-  CircularProgress, 
-  Box, 
+import {
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  Link,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+  Box,
   Checkbox,
   FormControlLabel,
   Divider,
   useTheme,
-  alpha
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useState, type FormEvent, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -219,6 +219,14 @@ function Login({ onLogin }: LoginProps) {
                   <EmailIcon color="action" />
                 </InputAdornment>
               ),
+              style: { color: '#000000' }
+            }}
+            inputProps={{
+              style: {
+                color: '#000000 !important',
+                WebkitTextFillColor: '#000000',
+                opacity: 1
+              }
             }}
             disabled={loading}
             sx={{
@@ -226,6 +234,22 @@ function Login({ onLogin }: LoginProps) {
                 '&.Mui-focused': {
                   boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
                 },
+              },
+              '& .MuiInputBase-input': {
+                color: '#000000 !important',
+                WebkitTextFillColor: '#000000 !important',
+                opacity: '1 !important',
+              },
+              '& input': {
+                color: '#000000 !important',
+                WebkitTextFillColor: '#000000 !important',
+                opacity: '1 !important',
+              },
+              '& .MuiInputLabel-root': {
+                color: theme.palette.text.secondary,
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: theme.palette.primary.main,
               },
             }}
           />
@@ -270,6 +294,14 @@ function Login({ onLogin }: LoginProps) {
                   </IconButton>
                 </InputAdornment>
               ),
+              style: { color: '#000000' }
+            }}
+            inputProps={{
+              style: {
+                color: '#000000 !important',
+                WebkitTextFillColor: '#000000',
+                opacity: 1
+              }
             }}
             disabled={loading}
             sx={{
@@ -277,6 +309,22 @@ function Login({ onLogin }: LoginProps) {
                 '&.Mui-focused': {
                   boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
                 },
+              },
+              '& .MuiInputBase-input': {
+                color: '#000000 !important',
+                WebkitTextFillColor: '#000000 !important',
+                opacity: '1 !important',
+              },
+              '& input': {
+                color: '#000000 !important',
+                WebkitTextFillColor: '#000000 !important',
+                opacity: '1 !important',
+              },
+              '& .MuiInputLabel-root': {
+                color: theme.palette.text.secondary,
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: theme.palette.primary.main,
               },
             }}
           />
