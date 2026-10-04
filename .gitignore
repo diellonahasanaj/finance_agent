@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.pytest_cache
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+
+# Project specific - JSON data files (runtime-generated)
+backend_python/users.json
+backend_python/incomes.json
+backend_python/expenses.json
+backend_python/budgets.json
+backend_python/debts.json
+backend_python/recommendations.json
+
+# Standalone test scripts with hardcoded credentials
+backend_python/test_auth.py
+backend_python/test_jwt.py
+backend_python/test_login.py
+backend_python/test_mongo.py
+backend_python/test_mongo_user.py
+backend_python/create_test_user.py
+backend_python/reset_password.py
