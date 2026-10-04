@@ -84,10 +84,10 @@ function AnalyticsPage() {
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: '100%', overflow: 'hidden' }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4, flexWrap: "wrap", gap: 2 }}>
-        <Box>
-          <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.75rem', sm: '2.5rem' } }}>
             Financial Analytics
           </Typography>
           <Typography variant="body1" color="text.secondary">
@@ -112,7 +112,7 @@ function AnalyticsPage() {
       {!loading && data && (
         <>
           <Grid container spacing={2} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6}>
               <Paper sx={{ p: 2, borderRadius: 2, background: alpha(theme.palette.success.main, 0.08) }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <TrendingUp sx={{ color: theme.palette.success.main }} />
@@ -125,7 +125,7 @@ function AnalyticsPage() {
                 </Box>
               </Paper>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6}>
               <Paper sx={{ p: 2, borderRadius: 2, background: alpha(theme.palette.warning.main, 0.08) }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <TrendingDown sx={{ color: theme.palette.warning.main }} />

@@ -1,3 +1,4 @@
+from typing import List
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -6,9 +7,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
     ENV: str = "development"
-    FRONTEND_URL: str = "http://localhost:5173"
+    FRONTEND_URLS: List[str] = ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"]
     SHOW_DEMO_RESET_LINK: bool = True
-    
+
     class Config:
         env_file = ".env"
 

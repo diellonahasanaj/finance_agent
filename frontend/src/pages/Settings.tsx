@@ -147,7 +147,7 @@ const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4, maxWidth: { xs: '100%', sm: 'md' } }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>Settings</Typography>
         <Typography variant="body1" color="textSecondary">

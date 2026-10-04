@@ -146,7 +146,7 @@ function Dashboard() {
     : [];
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, minHeight: '100vh' }}>
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
           <CircularProgress size={60} />
@@ -203,7 +203,7 @@ function Dashboard() {
 
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {stats.map((stat, index) => (
-              <Grid item key={stat.title} xs={12} sm={6} md={3}>
+              <Grid item key={stat.title} xs={12} sm={6} lg={3}>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
                   <Card sx={{ height: "100%", borderRadius: 3 }}>
                     <CardContent sx={{ p: 3 }}>
@@ -232,7 +232,7 @@ function Dashboard() {
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Budget Status</Typography>
                 <Grid container spacing={2}>
                   {dashboardData.budgets.map((budget) => (
-                    <Grid item xs={12} md={6} key={budget.category}>
+                    <Grid item xs={12} sm={6} lg={4} key={budget.category}>
                       <Box sx={{ mb: 1, display: "flex", justifyContent: "space-between" }}>
                         <Typography variant="body2">{budget.category}</Typography>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -253,7 +253,7 @@ function Dashboard() {
           )}
 
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} lg={6}>
               <Card sx={{ height: "100%", borderRadius: 3 }}>
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
@@ -305,7 +305,7 @@ function Dashboard() {
               </Card>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} lg={6}>
               <Card sx={{ height: "100%", borderRadius: 3 }}>
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>

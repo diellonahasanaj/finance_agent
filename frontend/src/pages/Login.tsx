@@ -219,14 +219,6 @@ function Login({ onLogin }: LoginProps) {
                   <EmailIcon color="action" />
                 </InputAdornment>
               ),
-              style: { color: '#000000' }
-            }}
-            inputProps={{
-              style: {
-                color: '#000000 !important',
-                WebkitTextFillColor: '#000000',
-                opacity: 1
-              }
             }}
             disabled={loading}
             sx={{
@@ -234,16 +226,6 @@ function Login({ onLogin }: LoginProps) {
                 '&.Mui-focused': {
                   boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
                 },
-              },
-              '& .MuiInputBase-input': {
-                color: '#000000 !important',
-                WebkitTextFillColor: '#000000 !important',
-                opacity: '1 !important',
-              },
-              '& input': {
-                color: '#000000 !important',
-                WebkitTextFillColor: '#000000 !important',
-                opacity: '1 !important',
               },
               '& .MuiInputLabel-root': {
                 color: theme.palette.text.secondary,
@@ -294,14 +276,6 @@ function Login({ onLogin }: LoginProps) {
                   </IconButton>
                 </InputAdornment>
               ),
-              style: { color: '#000000' }
-            }}
-            inputProps={{
-              style: {
-                color: '#000000 !important',
-                WebkitTextFillColor: '#000000',
-                opacity: 1
-              }
             }}
             disabled={loading}
             sx={{
@@ -309,16 +283,6 @@ function Login({ onLogin }: LoginProps) {
                 '&.Mui-focused': {
                   boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
                 },
-              },
-              '& .MuiInputBase-input': {
-                color: '#000000 !important',
-                WebkitTextFillColor: '#000000 !important',
-                opacity: '1 !important',
-              },
-              '& input': {
-                color: '#000000 !important',
-                WebkitTextFillColor: '#000000 !important',
-                opacity: '1 !important',
               },
               '& .MuiInputLabel-root': {
                 color: theme.palette.text.secondary,

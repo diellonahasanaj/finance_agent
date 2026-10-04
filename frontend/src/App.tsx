@@ -96,11 +96,9 @@ function App() {
           />
         )}
 
-        <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 }, ml: { md: user ? '260px' : 0 } }}>
+        <Box component="main" sx={{ flexGrow: 1, width: { xs: '100%', md: user ? 'calc(100% - 260px)' : '100%' }, ml: { md: user ? '260px' : 0 } }}>
           {/* Add Toolbar for mobile to account for AppBar */}
           {user && isMobile && <Toolbar />}
-          {/* Add Toolbar for desktop to account for sidebar */}
-          {user && !isMobile && <Toolbar />}
           <Routes>
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
             <Route path="/login" element={<Login onLogin={(user) => setUser(user)} />} />

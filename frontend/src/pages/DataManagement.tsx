@@ -69,10 +69,10 @@ function DataManagement() {
   ];
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: '100%', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
-        <Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate("/settings")}
@@ -80,7 +80,7 @@ function DataManagement() {
           >
             Back to Settings
           </Button>
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
             Data Management
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -102,7 +102,7 @@ function DataManagement() {
       )}
 
       <Card sx={{ borderRadius: 3 }}>
-        <CardContent>
+        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
             Import Data
           </Typography>
@@ -159,7 +159,7 @@ function DataManagement() {
           </Card>
 
           <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-            <Box sx={{ minWidth: 200 }}>
+            <Box sx={{ minWidth: { xs: '100%', sm: 200 } }}>
               <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
                 Data Type
               </Typography>
@@ -177,7 +177,7 @@ function DataManagement() {
               </Box>
             </Box>
 
-            <Box sx={{ minWidth: 200 }}>
+            <Box sx={{ minWidth: { xs: '100%', sm: 200 } }}>
               <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
                 File Format
               </Typography>

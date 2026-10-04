@@ -71,7 +71,9 @@ const AuthCard: React.FC<AuthCardProps> = ({
           sx={{
             p: { xs: 3, sm: 4 },
             borderRadius: 3,
-            background: 'rgba(255, 255, 255, 0.95)',
+            background: theme.palette.mode === 'dark' 
+              ? alpha(theme.palette.background.paper, 0.95)
+              : 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(20px)',
             border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
             boxShadow: `

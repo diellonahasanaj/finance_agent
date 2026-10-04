@@ -208,10 +208,10 @@ function Debt() {
   const totalMonthlyPayment = activeDebts.reduce((sum, d) => sum + d.monthly_payment, 0);
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+  <Box sx={{ p: { xs: 2, sm: 3 }, width: "100%", maxWidth: "100%" }}>
       {/* Header */}
       <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
-        <Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate("/dashboard")}
@@ -219,14 +219,14 @@ function Debt() {
           >
             Back to Dashboard
           </Button>
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
             Debt Management
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Track and manage your debts
           </Typography>
         </Box>
-        <Box sx={{ display: "flex", gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: 'wrap' }}>
           <Button
             startIcon={<Add />}
             variant="contained"
@@ -257,43 +257,43 @@ function Debt() {
       )}
 
       {/* Summary Cards */}
-      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-        <Card sx={{ flex: 1, minWidth: 200, borderRadius: 2 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 2, mb: 3 }}>
+        <Card sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography variant="body2" color="text.secondary">
               Total Debt
             </Typography>
-            <Typography variant="h4" color="error.main" sx={{ fontWeight: 600 }}>
+            <Typography variant="h4" color="error.main" sx={{ fontWeight: 600, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
               {formatCurrency(totalDebt)}
             </Typography>
           </CardContent>
         </Card>
-        <Card sx={{ flex: 1, minWidth: 200, borderRadius: 2 }}>
+        <Card sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography variant="body2" color="text.secondary">
               Monthly Payments
             </Typography>
-            <Typography variant="h4" color="warning.main" sx={{ fontWeight: 600 }}>
+            <Typography variant="h4" color="warning.main" sx={{ fontWeight: 600, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
               {formatCurrency(totalMonthlyPayment)}
             </Typography>
           </CardContent>
         </Card>
-        <Card sx={{ flex: 1, minWidth: 200, borderRadius: 2 }}>
+        <Card sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography variant="body2" color="text.secondary">
               Active Debts
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+            <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
               {activeDebts.length}
             </Typography>
           </CardContent>
         </Card>
-        <Card sx={{ flex: 1, minWidth: 200, borderRadius: 2 }}>
+        <Card sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography variant="body2" color="text.secondary">
               Paid Off
             </Typography>
-            <Typography variant="h4" color="success.main" sx={{ fontWeight: 600 }}>
+            <Typography variant="h4" color="success.main" sx={{ fontWeight: 600, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
               {paidOffDebts.length}
             </Typography>
           </CardContent>
@@ -306,16 +306,16 @@ function Debt() {
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
             Active Debts
           </Typography>
-          <TableContainer>
-            <Table>
+          <TableContainer sx={{ overflowX: 'auto' }}>
+            <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Creditor</TableCell>
-                  <TableCell>Amount</TableCell>
-                  <TableCell>Interest Rate</TableCell>
-                  <TableCell>Monthly Payment</TableCell>
-                  <TableCell>Due Date</TableCell>
-                  <TableCell align="center">Actions</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>Creditor</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>Amount</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>Interest Rate</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>Monthly Payment</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>Due Date</TableCell>
+                  <TableCell align="center" sx={{ minWidth: 120 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -331,12 +331,12 @@ function Debt() {
                         </Typography>
                       )}
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: theme.palette.error.main }}>
+                    <TableCell sx={{ fontWeight: 600, color: theme.palette.error.main, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                       {formatCurrency(debt.amount)}
                     </TableCell>
-                    <TableCell>{debt.interest_rate}%</TableCell>
-                    <TableCell>{formatCurrency(debt.monthly_payment)}</TableCell>
-                    <TableCell>{debt.due_date}</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{debt.interest_rate}%</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{formatCurrency(debt.monthly_payment)}</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{debt.due_date}</TableCell>
                     <TableCell align="center">
                       <Tooltip title="Mark as Paid">
                         <IconButton size="small" onClick={() => handleTogglePaidOff(debt)} color="success">
@@ -377,14 +377,14 @@ function Debt() {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
               Paid Off Debts
             </Typography>
-            <TableContainer>
-              <Table>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Creditor</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>Interest Rate</TableCell>
-                    <TableCell align="center">Actions</TableCell>
+                    <TableCell sx={{ minWidth: 120 }}>Creditor</TableCell>
+                    <TableCell sx={{ minWidth: 100 }}>Amount</TableCell>
+                    <TableCell sx={{ minWidth: 100 }}>Interest Rate</TableCell>
+                    <TableCell align="center" sx={{ minWidth: 80 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -395,10 +395,10 @@ function Debt() {
                           {debt.creditor}
                         </Typography>
                       </TableCell>
-                      <TableCell sx={{ textDecoration: "line-through" }}>
+                      <TableCell sx={{ textDecoration: "line-through", fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                         {formatCurrency(debt.amount)}
                       </TableCell>
-                      <TableCell>{debt.interest_rate}%</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{debt.interest_rate}%</TableCell>
                       <TableCell align="center">
                         <Tooltip title="Mark as Unpaid">
                           <IconButton size="small" onClick={() => handleTogglePaidOff(debt)}>

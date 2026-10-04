@@ -73,10 +73,10 @@ function AddTransaction() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: { xs: '100%', sm: 600 }, mx: 'auto' }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: { xs: '100%', sm: 600, md: 800 }, mx: 'auto' }}>
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-        <Button 
-          startIcon={<ArrowBack />} 
+        <Button
+          startIcon={<ArrowBack />}
           onClick={() => navigate('/dashboard')}
           sx={{ mb: 2 }}
         >
@@ -85,8 +85,8 @@ function AddTransaction() {
       </Box>
 
       <Card sx={{ borderRadius: 3 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 4 }}>
+        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+          <Typography variant="h4" sx={{ fontWeight: 600, mb: 4, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
             Add {type === 'income' ? 'Income' : 'Expense'}
           </Typography>
 
@@ -114,7 +114,7 @@ function AddTransaction() {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   label="Amount"
@@ -126,7 +126,7 @@ function AddTransaction() {
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   label="Date"
@@ -134,12 +134,13 @@ function AddTransaction() {
                   required
                   value={formData.date}
                   onChange={handleChange('date')}
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
 
               {type === 'expense' ? (
                 <>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} sm={6}>
                     <FormControl fullWidth>
                       <InputLabel>Category</InputLabel>
                       <Select value={formData.category} label="Category" onChange={handleChange('category')}>
@@ -150,7 +151,7 @@ function AddTransaction() {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
                       label="Description"
@@ -180,7 +181,7 @@ function AddTransaction() {
                   size="large"
                   disabled={loading}
                   startIcon={<Save />}
-                  sx={{ 
+                  sx={{
                     py: 1.5,
                     backgroundColor: theme.palette.primary.main,
                     '&:hover': {

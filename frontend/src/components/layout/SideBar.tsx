@@ -85,10 +85,18 @@ function SideBar({ mobileOpen, onDrawerToggle }: SideBarProps) {
               }
             }}
           >
-            <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>
+            <ListItemIcon sx={{ color: "inherit", minWidth: 48 }}>
               {item.icon}
             </ListItemIcon>
-            <ListItemText primary={item.label} />
+            <ListItemText 
+              primary={item.label}
+              sx={{
+                '& .MuiTypography-root': {
+                  fontSize: '0.95rem',
+                  fontWeight: 500,
+                }
+              }}
+            />
           </ListItemButton>
         ))}
       </List>
@@ -137,10 +145,9 @@ function SideBar({ mobileOpen, onDrawerToggle }: SideBarProps) {
           "& .MuiDrawer-paper": {
             width: DRAWER_WIDTH,
             boxSizing: "border-box",
-            ...(isMobile && {
-              top: 0,
-              height: '100%',
-            }),
+            ...(isMobile
+              ? { top: 0, height: '100%' }
+              : { position: 'fixed', left: 0, top: 0, height: '100vh' }),
           },
         }}
       >

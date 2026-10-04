@@ -107,10 +107,10 @@ function SetBudget() {
   ];
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 800, mx: 'auto' }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: { xs: '100%', md: 1000 }, mx: 'auto' }}>
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Button 
-          startIcon={<ArrowBack />} 
+        <Button
+          startIcon={<ArrowBack />}
           onClick={() => navigate('/dashboard')}
           sx={{ mb: 2 }}
         >
@@ -120,10 +120,10 @@ function SetBudget() {
 
       <Grid container spacing={3}>
         {/* Set New Budget Form */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} lg={5}>
           <Card sx={{ borderRadius: 3, height: '100%' }}>
-            <CardContent sx={{ p: 4 }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, mb: 4 }}>
+            <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+              <Typography variant="h4" sx={{ fontWeight: 600, mb: 4, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
                 Set Budget
               </Typography>
 
@@ -190,7 +190,7 @@ function SetBudget() {
                       size="large"
                       disabled={loading}
                       startIcon={loading ? <CircularProgress size={20} /> : <Save />}
-                      sx={{ 
+                      sx={{
                         py: 1.5,
                         backgroundColor: theme.palette.primary.main,
                         '&:hover': {
@@ -208,9 +208,9 @@ function SetBudget() {
         </Grid>
 
         {/* Existing Budgets */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} lg={7}>
           <Card sx={{ borderRadius: 3, height: '100%' }}>
-            <CardContent sx={{ p: 4 }}>
+            <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                 <TrendingUp sx={{ mr: 1, color: theme.palette.primary.main }} />
                 <Typography variant="h5" sx={{ fontWeight: 600 }}>
@@ -223,7 +223,7 @@ function SetBudget() {
                   No budgets set yet. Create your first budget!
                 </Typography>
               ) : (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
                   {existingBudgets.map((budget) => (
                     <Box
                       key={budget._id}

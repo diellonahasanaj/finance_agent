@@ -42,10 +42,10 @@ const Advisor: React.FC = () => {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4, maxWidth: { xs: '100%', sm: 'lg' } }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 600, mb: 1, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
           Financial Advisor
         </Typography>
         <Typography variant="body1" color="textSecondary">
@@ -56,8 +56,8 @@ const Advisor: React.FC = () => {
       {/* Disclaimer */}
       <Alert severity="info" sx={{ mb: 3 }} icon={<InfoIcon />}>
         <Typography variant="body2">
-          <strong>Important Disclaimer:</strong> This system provides educational financial guidance and does not replace professional financial advice. 
-          All recommendations are based on rule-based analysis of your financial data. 
+          <strong>Important Disclaimer:</strong> This system provides educational financial guidance and does not replace professional financial advice.
+          All recommendations are based on rule-based analysis of your financial data.
           Consult a qualified financial advisor before making major financial decisions.
         </Typography>
       </Alert>

@@ -37,3 +37,45 @@ body {
 button {
   font-family: inherit;
 }
+
+/* Global responsive safeguards */
+body {
+  overflow-x: hidden;
+}
+
+img,
+svg,
+canvas {
+  max-width: 100%;
+}
+
+.MuiContainer-root,
+.MuiCard-root,
+.MuiPaper-root {
+  max-width: 100%;
+}
+
+.MuiTableContainer-root {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.MuiDialog-paper {
+  max-width: calc(100vw - 24px);
+}
+
+@media (max-width: 600px) {
+  .MuiDialog-paper {
+    margin: 12px;
+    width: calc(100% - 24px);
+  }
+
+  .MuiCardContent-root {
+    padding: 16px;
+  }
+
+  .MuiCardContent-root:last-child {
+    padding-bottom: 16px;
+  }
+}
